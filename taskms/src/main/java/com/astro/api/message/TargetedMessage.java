@@ -1,4 +1,6 @@
-package com.astro.api;
+package com.astro.api.message;
+
+import com.astro.api.Person;
 
 import java.util.List;
 

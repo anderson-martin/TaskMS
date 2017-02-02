@@ -1,7 +1,6 @@
-package com.astro.api;
+package com.astro.api.message;
 
 import java.time.ZonedDateTime;
-import java.util.List;
 
 /**
  * Created by rohan on 2/2/17.

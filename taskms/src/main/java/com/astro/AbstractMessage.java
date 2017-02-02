@@ -1,6 +1,6 @@
 package com.astro;
 
-import com.astro.api.Message;
+import com.astro.api.message.Message;
 import com.astro.api.Person;
 
 import java.time.ZonedDateTime;

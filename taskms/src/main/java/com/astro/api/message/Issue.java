@@ -1,6 +1,4 @@
-package com.astro.api;
-
-import java.util.List;
+package com.astro.api.message;
 
 /**
  * Created by rohan on 2/2/17.
