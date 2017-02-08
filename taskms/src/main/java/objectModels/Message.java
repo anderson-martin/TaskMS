@@ -9,7 +9,7 @@ import javax.persistence.*;
 
 // This is a test to check if Hibernate work
 
-@Entity(name="User_table")
+@Entity(name="MessageTable")
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

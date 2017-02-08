@@ -27,26 +27,20 @@ class MessageTest {
         Transaction tx = session.beginTransaction();
         session.persist(message);
         tx.commit();
+        @SuppressWarnings("unchecked")
+        List<Message> list = (List<Message>) session.createQuery("from MessageTable").list();
+
+        if (list.size() > 1) {
+            fail("Message configuration in error; table should contain only one."
+                    + " Set ddl to drop-create.");
+        }
+        if (list.size() == 0) {
+            fail("Read of initial message failed; check saveMessage() for errors."
+                    + " How did this test run?");
+        }
+        for (Message m : list) {
+            System.out.println(m);
+        }
         session.close();
     }
-//
-//    @Test(dependsOnMethods = "saveMessage")
-//    public void readMessage() {
-//        Session session = factory.openSession();
-//        @SuppressWarnings("unchecked")
-//        List<Message> list = (List<Message>) session.createQuery("from Message").list();
-//
-//        if (list.size() > 1) {
-//            fail("Message configuration in error; table should contain only one."
-//                    + " Set ddl to drop-create.");
-//        }
-//        if (list.size() == 0) {
-//            fail("Read of initial message failed; check saveMessage() for errors."
-//                    + " How did this test run?");
-//        }
-//        for (Message m : list) {
-//            System.out.println(m);
-//        }
-//        session.close();
-//    }
 }
