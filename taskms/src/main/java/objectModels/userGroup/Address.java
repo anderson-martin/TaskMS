@@ -1,4 +1,4 @@
-package experi.userGroup;
+package objectModels.userGroup;
 
 /**
  * Created by rohan on 2/6/17.

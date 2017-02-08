@@ -1,4 +1,4 @@
-package experi.msg;
+package objectModels.msg;
 
 import java.time.ZonedDateTime;
 

@@ -1,6 +1,4 @@
-package experi.userGroup;
-
-import java.util.List;
+package objectModels.userGroup;
 
 /**
  * Created by rohan on 2/6/17.

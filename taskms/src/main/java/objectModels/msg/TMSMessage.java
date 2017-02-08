@@ -1,6 +1,6 @@
-package experi.msg;
+package objectModels.msg;
 
-import experi.userGroup.User;
+import objectModels.userGroup.User;
 
 import java.time.ZonedDateTime;
 

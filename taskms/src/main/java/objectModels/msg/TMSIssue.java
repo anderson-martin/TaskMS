@@ -1,4 +1,4 @@
-package experi.msg;
+package objectModels.msg;
 
 /**
  * Created by rohan on 2/6/17.

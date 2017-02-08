@@ -1,3 +1,12 @@
+/*
+If you want to use this, delete those /* lines */
+What is web.xml
+    Standard deployment descriptor defined by Java EE
+    Specify the metadata used by the web container to deploy the application
+    >= JAVA EE6: OPTIONAL, use Annotations to do
+*/
+
+
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- This web.xml file is not required when using Servlet 3.0 container,
      see implementation details http://jersey.java.net/nonav/documentation/latest/jax-rs.html -->
@@ -7,7 +16,7 @@
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>com.astro</param-value>
+            <param-value>resources</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
@@ -16,3 +25,4 @@
         <url-pattern>/webapi/*</url-pattern>
     </servlet-mapping>
 </web-app>
+
