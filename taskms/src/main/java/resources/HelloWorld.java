@@ -3,6 +3,7 @@ package resources;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Created by rohan on 2/8/17.
@@ -10,8 +11,8 @@ import javax.ws.rs.Produces;
 @Path("/sayHello")
 public class HelloWorld {
     @GET
-    @Produces("text/plain")
-    public String seyHello() {
-        return "Hello world!";
+    @Produces("application/json")
+    public Vit seyHello() {
+        return new Vit(1, "Vittu perkele!!", "asd","00000");
     }
 }

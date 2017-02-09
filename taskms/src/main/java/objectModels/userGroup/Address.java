@@ -1,11 +1,18 @@
 package objectModels.userGroup;
 
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+
 /**
  * Created by rohan on 2/6/17.
  */
+@Embeddable
 public class Address {
+    @Column
     private String street;
+    @Column
     private String postalCode;
+    @Column
     private String city;
 
     public String getStreet() {

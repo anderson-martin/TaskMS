@@ -1,14 +1,25 @@
 package objectModels.msg;
 
+import objectModels.userGroup.Group;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
+
 /**
  * Created by rohan on 2/6/17.
  */
+@Entity
 public class TMSIssue extends TMSMessage{
     public enum STATUS {
-        NOTREAD, READ, RESOLVED, NOTRESOLVED
+        HANDLED
     }
-
+    @Column
     private STATUS status;
+
+    @ManyToOne
+    private Group group;
+
 
     public STATUS getStatus() {
         return status;

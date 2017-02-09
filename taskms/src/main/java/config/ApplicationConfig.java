@@ -3,6 +3,8 @@ package config;
 /**
  * Created by rohan on 2/8/17.
  */
+import com.fasterxml.jackson.jaxrs.annotation.JacksonFeatures;
+import org.glassfish.jersey.jackson.JacksonFeature;
 import resources.HelloWorld;
 
 import java.util.Set;
@@ -25,7 +27,6 @@ public class ApplicationConfig extends Application {
         addRestResourceClasses(resources);
         return resources;
     }
-
     /**
      * Do not modify addRestResourceClasses() method.
      * It is automatically populated with
@@ -34,5 +35,7 @@ public class ApplicationConfig extends Application {
      */
     private void addRestResourceClasses(Set<Class<?>> resources) {
         resources.add(HelloWorld.class);
+        // register Jackson JSON providers
+        resources.add(JacksonFeature.class);
     }
 }

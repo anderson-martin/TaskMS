@@ -1,17 +1,40 @@
 package objectModels.msg;
 
-import java.time.ZonedDateTime;
+import objectModels.userGroup.User;
+
+import javax.persistence.*;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Created by rohan on 2/6/17.
  */
+
+@Entity
 public class TMSTask extends TMSMessage{
     public enum STATUS {
-        READ, NOTREAD, RESOLVED, NOT_RESOLVED
+        IN_PROGRESS, DONE
     }
 
+    @Column
     private STATUS status;
-    private ZonedDateTime dueDate;
+    @Column
+    private Date dueDate;
+    @ManyToMany
+    @JoinTable(
+            name = "TMSTask_User",
+            joinColumns = {@JoinColumn(name="task_id")},
+            inverseJoinColumns = {@JoinColumn(name = "user_id")}
+    )
+    private List<User> toUsers;
+
+    public List<User> getUsers() {
+        return toUsers;
+    }
+
+    public void setUsers(List<User> toUsers) {
+        this.toUsers = toUsers;
+    }
 
     public STATUS getStatus() {
         return status;
@@ -21,11 +44,11 @@ public class TMSTask extends TMSMessage{
         this.status = status;
     }
 
-    public ZonedDateTime getDueDate() {
+    public Date getDueDate() {
         return dueDate;
     }
 
-    public void setDueDate(ZonedDateTime dueDate) {
+    public void setDueDate(Date dueDate) {
         this.dueDate = dueDate;
     }
 }

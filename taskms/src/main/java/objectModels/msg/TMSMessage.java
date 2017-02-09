@@ -2,17 +2,31 @@ package objectModels.msg;
 
 import objectModels.userGroup.User;
 
-import java.time.ZonedDateTime;
+import javax.persistence.*;
+import java.util.Date;
 
 /**
  * Created by rohan on 2/5/17.
  */
+
+/*
+This class is not a persistence entity
+The result resemble @Inheritance(strategy = SINGLE_TABLE)
+ */
+@MappedSuperclass
 public abstract class TMSMessage {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    private ZonedDateTime sentDate;
+
+    @Column
+    private Date sentDate;
+    @Column
     private String title;
+    @Column
     private String content;
+    @ManyToOne
     private User sender;
 
     public int getId() {
@@ -23,11 +37,11 @@ public abstract class TMSMessage {
         this.id = id;
     }
 
-    public ZonedDateTime getSentDate() {
+    public Date getSentDate() {
         return sentDate;
     }
 
-    public void setSentDate(ZonedDateTime sentDate) {
+    public void setSentDate(Date sentDate) {
         this.sentDate = sentDate;
     }
 

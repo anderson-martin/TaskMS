@@ -1,18 +1,31 @@
 package objectModels.userGroup;
 
+import javax.persistence.*;
+import java.util.List;
+
 /**
  * Created by rohan on 2/6/17.
  */
+
+@Entity
 public class HierarchyGroup {
     public enum STATUS {
         ACTIVE, CLOSED
     }
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    @Column(nullable = false, length = 25)
     private String name;
+    @Column(nullable = false)
     private STATUS status;
-    private int superGroupId;
 
+    // this mapping is tricky
+    private int supGroupId;
+
+    // this mapping is tricky
+    private List<Integer> subGroupIds;
 
 
     public HierarchyGroup() {}
@@ -49,11 +62,11 @@ public class HierarchyGroup {
         this.status = status;
     }
     public int getSuperGroupId() {
-        return superGroupId;
+        return supGroupId;
     }
 
-    public void setSuperGroupId(int superGroupId) {
-        this.superGroupId = superGroupId;
+    public void setSuperGroupId(int supGroupId) {
+        this.supGroupId = supGroupId;
     }
 
 }
