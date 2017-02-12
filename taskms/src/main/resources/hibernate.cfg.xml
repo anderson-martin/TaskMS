@@ -17,6 +17,10 @@
         <!--  Drop and re-create the database schema on startup  -->
         <property name="hbm2ddl.auto">create-drop</property>
 
-        <mapping class="objectModels.Message"/>
+        <mapping class="objectModels.userGroup.HierarchyGroup"/>
+        <mapping class="objectModels.userGroup.User"/>
+        <mapping class="objectModels.msg.TMSMessage"/>
+        <mapping class="objectModels.msg.TMSTask"/>
+        <mapping class="objectModels.msg.TMSIssue"/>
     </session-factory>
 </hibernate-configuration>

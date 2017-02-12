@@ -1,6 +1,7 @@
 package objectModels.msg;
 
 import objectModels.userGroup.User;
+import org.omg.CORBA.PUBLIC_MEMBER;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -20,14 +21,25 @@ public abstract class TMSMessage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column
+    @Column(nullable = false)
     private Date sentDate;
-    @Column
+    @Column(nullable = false, length = 100)
     private String title;
-    @Column
+    @Column(nullable = false, length = 255)
     private String content;
+
     @ManyToOne
+    @JoinColumn(name = "sender_id")
     private User sender;
+
+    public TMSMessage() {};
+
+    public TMSMessage(User sender, Date sentDate, String title, String content) {
+        setSender(sender);
+        setSentDate(sentDate);
+        setContent(content);
+        setTitle(title);
+    }
 
     public int getId() {
         return id;

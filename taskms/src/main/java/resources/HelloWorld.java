@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class HelloWorld {
     @GET
     @Produces("application/json")
-    public Vit seyHello() {
-        return new Vit(1, "Vittu perkele!!", "asd","00000");
+    public String seyHello() {
+        return "vittu";
     }
 }

@@ -8,12 +8,24 @@ import javax.persistence.Embeddable;
  */
 @Embeddable
 public class Address {
-    @Column
+    @Column(length = 50) // magic number
     private String street;
-    @Column
+    @Column(length = 14) // magic number
     private String postalCode;
-    @Column
+    @Column(length = 20) // magic number
     private String city;
+
+    public Address() {};
+    public Address(String street, String postalCode, String city) {
+        setCity(city);
+        setPostalCode(postalCode);
+        setStreet(street);
+    }
+
+    @Override
+    public String toString() {
+        return "Address{ street = " + street + ", postalCode = " + postalCode + ", city = " + city + " }";
+    }
 
     public String getStreet() {
         return street;
