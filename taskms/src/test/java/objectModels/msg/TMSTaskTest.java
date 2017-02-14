@@ -1,7 +1,7 @@
 package objectModels.msg;
 
-import config.HibernateUtil;
 
+import config.JPASessionUtil;
 import objectModels.userGroup.HierarchyGroup;
 import objectModels.userGroup.HierarchyGroupTest;
 import objectModels.userGroup.User;
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class TMSTaskTest {
     @Test
     void persistTMSTask() {
-        HibernateUtil.doWithSession(session -> {
+        JPASessionUtil.doWithSession(session -> {
 
             // group must be persist first, then user
             HierarchyGroupTest.persistHierarchyGroups();
@@ -53,11 +53,6 @@ class TMSTaskTest {
             // as integrity constrain is validated
             session.flush();
 
-            session.evict(tmsTask);
-            TMSTask task = new TMSTask();
-            task.setId(1);
-            session.refresh(task);
-            System.out.println(task.getRecipients());
         });
     }
 }

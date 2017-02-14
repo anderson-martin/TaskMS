@@ -1,12 +1,11 @@
 package objectModels.userGroup;
 
-import config.HibernateUtil;
+import config.JPASessionUtil;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static config.HibernateUtil.doWithSession;
+import static config.JPASessionUtil.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -54,7 +53,7 @@ public class HierarchyGroupTest {
     @Test
     void testPersistingHierarchyGroup() {
         persistHierarchyGroups();
-        HibernateUtil.doWithSession( session -> {
+        JPASessionUtil.doWithSession(session -> {
             HierarchyGroup managerGroup = findUniqueGroup(session, manager);
             assertEquals(managerGroup.getName(),  manager);
             assertEquals(managerGroup.getManagerGroup(), null);

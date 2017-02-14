@@ -1,10 +1,9 @@
 package objectModels.userGroup;
 
-import config.HibernateUtil;
+import config.JPASessionUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -19,7 +18,7 @@ public class UserTest {
     public static final String userName1 = "arseni";
 
     public static void persistUsers() {
-        HibernateUtil.doWithSession(session -> {
+        JPASessionUtil.doWithSession(session -> {
             // get group and make sure they are not null
             HierarchyGroup manager = HierarchyGroupTest.findUniqueGroup(session, HierarchyGroupTest.manager);
             HierarchyGroup cashier_lead = HierarchyGroupTest.findUniqueGroup(session, HierarchyGroupTest.cashier_lead);
@@ -56,7 +55,7 @@ public class UserTest {
 
         HierarchyGroupTest.persistHierarchyGroups();
         UserTest.persistUsers();
-        Session session = HibernateUtil.getSession();
+        Session session = JPASessionUtil.getSession();
         Transaction transaction = null;
 
         try {

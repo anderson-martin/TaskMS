@@ -1,6 +1,6 @@
 package objectModels.msg;
 
-import config.HibernateUtil;
+import config.JPASessionUtil;
 import objectModels.userGroup.HierarchyGroup;
 import objectModels.userGroup.HierarchyGroupTest;
 import objectModels.userGroup.User;
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class TMSIssueTest {
     @Test
     void persistTMSIssue() {
-        HibernateUtil.doWithSession( session -> {
+        JPASessionUtil.doWithSession(session -> {
             // group must be persisted first, then user (because user have group)
             HierarchyGroupTest.persistHierarchyGroups();
             UserTest.persistUsers();
