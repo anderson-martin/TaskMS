@@ -64,4 +64,13 @@ public class HibernateUtil {
             session.close();
         }
     }
+    public static void rollBack(Transaction transaction) {
+        try {
+            if (transaction != null) transaction.rollback();
+        } catch (Exception rbEx) {
+            System.err.println("Rollback of transaction failed, trace follows! ");
+            rbEx.printStackTrace();
+        }
+    }
+
 }

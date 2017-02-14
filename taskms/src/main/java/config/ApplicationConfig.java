@@ -3,7 +3,7 @@ package config;
 /**
  * Created by rohan on 2/8/17.
  */
-import resources.HelloWorld;
+import restResources.HelloWorld;
 
 import java.util.Set;
 import javax.ws.rs.core.Application;

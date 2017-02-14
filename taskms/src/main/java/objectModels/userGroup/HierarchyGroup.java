@@ -12,6 +12,12 @@ import java.util.Set;
  */
 
 @Entity
+@NamedQueries(
+        @NamedQuery(
+                name = "findGroupByName",
+                query = "from HierarchyGroup hg where hg.name = :name"
+        )
+)
 public class HierarchyGroup {
     public enum STATUS {
         ACTIVE, CLOSED
@@ -19,7 +25,7 @@ public class HierarchyGroup {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private long id;
 
     @Column(nullable = false, length = 25, unique = true)
     private String name;
@@ -45,11 +51,11 @@ public class HierarchyGroup {
         setName(name);
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -102,7 +108,7 @@ public class HierarchyGroup {
 
     @Override
     public int hashCode() {
-        int result = id;
+        int result = 31;
         result = 31 * result + name.hashCode();
         result = 31 * result + status.hashCode();
         return result;

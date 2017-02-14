@@ -73,6 +73,7 @@ public class UserTest {
             System.out.println(userName + " : " + user);
             System.out.println("\n" + userName1 + " : "  + user1);
 
+
             transaction.commit();
         } catch (Exception ex) {
             if(transaction != null) transaction.rollback();
