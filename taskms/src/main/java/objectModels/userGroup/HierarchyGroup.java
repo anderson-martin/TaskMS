@@ -24,8 +24,9 @@ public class HierarchyGroup {
     @Column(nullable = false, length = 25, unique = true)
     private String name;
 
+    // status default: ACTIVE
     @Column(nullable = false)
-    private STATUS status;
+    private STATUS status = STATUS.ACTIVE;
 
 
 
@@ -40,8 +41,7 @@ public class HierarchyGroup {
     public HierarchyGroup() {}
 
 
-    public HierarchyGroup(String name, STATUS status) {
-        setStatus(status);
+    public HierarchyGroup(String name) {
         setName(name);
     }
 

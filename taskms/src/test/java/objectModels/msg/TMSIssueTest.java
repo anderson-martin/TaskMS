@@ -24,26 +24,33 @@ class TMSIssueTest {
             UserTest.persistUsers();
 
             User user = UserTest.findUniqueUser(session, UserTest.userName);
-            HierarchyGroup hierarchyGroup = HierarchyGroupTest.findUniqueGroup(session, HierarchyGroupTest.cashier_lead);
+            HierarchyGroup senderGroup  = HierarchyGroupTest.findUniqueGroup(session, HierarchyGroupTest.cashier_lead);
+            HierarchyGroup recipientGroup = HierarchyGroupTest.findUniqueGroup(session, HierarchyGroupTest.cashiers);
+
 
             assertNotNull(user);
-            assertNotNull(hierarchyGroup);
+            assertNotNull(senderGroup);
+            assertNotNull(recipientGroup);
 
             TMSIssue tmsIssue = new TMSIssue(
                     user,
                     new Date(),
                     "WAREHOUSE is in MAYHEM",
                     "New employee committed a bomb suicide",
-                    hierarchyGroup
+                    senderGroup,
+                    recipientGroup
             );
             session.persist(tmsIssue);
 
+            // remove the object from session cash
             session.evict(tmsIssue);
+
             int id = tmsIssue.getId();
 
             Query<TMSIssue> getIssue = session.createQuery("from TMSIssue ts where ts.id = :id", TMSIssue.class);
 
             TMSIssue retreivedIssue = getIssue.setParameter("id", id).uniqueResult();
+
 
             System.out.println(">>>>>>>>> RESULT fetch from database");
             System.out.println(retreivedIssue);

@@ -1,4 +1,4 @@
-package Service;
+package service;
 
 import objectModels.msg.TMSTask;
 import objectModels.userGroup.HierarchyGroup;

@@ -2,6 +2,7 @@ package objectModels.msg;
 
 import config.HibernateUtil;
 
+import objectModels.userGroup.HierarchyGroup;
 import objectModels.userGroup.HierarchyGroupTest;
 import objectModels.userGroup.User;
 import objectModels.userGroup.UserTest;
@@ -37,12 +38,26 @@ class TMSTaskTest {
             assertNotNull(user);
             assertNotNull(user1);
 
-            tmsTask.getRecipients().add(UserTest.findUniqueUser(session, UserTest.userName));
-            tmsTask.getRecipients().add(UserTest.findUniqueUser(session, UserTest.userName1));
+            tmsTask.getRecipients().add(user);
+            tmsTask.getRecipients().add(user1);
+
+            HierarchyGroup hierarchyGroup = new HierarchyGroup();
+            hierarchyGroup.setId(1);
+            tmsTask.setSenderGroup(hierarchyGroup);
 
             session.persist(tmsTask);
+//            System.out.println(tmsTask);
 
-            System.out.println(tmsTask);
+            // hibernate save link table information at flush time, so we have to flush()
+            // flush() force Hibernate to execute SQL, exception may be thrown at this time
+            // as integrity constrain is validated
+            session.flush();
+
+            session.evict(tmsTask);
+            TMSTask task = new TMSTask();
+            task.setId(1);
+            session.refresh(task);
+            System.out.println(task.getRecipients());
         });
     }
 }

@@ -24,23 +24,21 @@ public class UserTest {
             HierarchyGroup manager = HierarchyGroupTest.findUniqueGroup(session, HierarchyGroupTest.manager);
             HierarchyGroup cashier_lead = HierarchyGroupTest.findUniqueGroup(session, HierarchyGroupTest.cashier_lead);
             HierarchyGroup cashiers = HierarchyGroupTest.findUniqueGroup(session, HierarchyGroupTest.cashiers);
+
             assert cashier_lead != null;
             assert manager != null;
             assert cashiers != null;
-            // make address
-            Address address = new Address("Lintukorventie 2", "02660", "ESPOO");
 
             // initialize user
-            User user = new User(userName, "Dang", "Nguyen", "nguyen.h.dang.1001@gmail.com", User.STATUS.ACTIVE);
-            user.setAddress(address);
+            User user = new User(userName, "Dang", "Nguyen");
+            user.setContactDetail( new ContactDetail("Lintukorventie 2 M", "02660", "ESPOO", "nguyen.h.dang.1001@gmail.com", "0465672648"));
             user.getGroups().add(manager);
             user.getGroups().add(cashier_lead);
-            user.setPhoneNum("0465672648");
+            user.getGroups().add(cashiers);
 
-            User user1 = new User(userName1, "Arseni", "Kurilov", "arseni.kurilov@metropolia.fi", User.STATUS.ACTIVE);
-            user1.setAddress(address);
+            User user1 = new User(userName1, "Arseni", "Kurilov");
+            user1.setContactDetail(new ContactDetail("Vanha maantie 6", "02567", "ESPOO", "arseni.kurilov@metropolia.fi", "123456789"));
             user1.getGroups().add(cashiers);
-            user1.setPhoneNum("0467891234");
 
             session.persist(user1);
             session.persist(user);

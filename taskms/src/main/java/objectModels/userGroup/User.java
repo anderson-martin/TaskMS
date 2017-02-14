@@ -35,16 +35,12 @@ public class User {
     @Column(length = 25, nullable = false)
     private String lastName;
 
-    @Column(length = 50)
-    private String email;
-    @Column(length = 15)
-    private String phoneNum;
 
     @Column(nullable = false)
-    private STATUS status;
+    private STATUS status = STATUS.ACTIVE;
 
     @Embedded
-    private Address address;
+    private ContactDetail contactDetail;
 
     @ManyToMany
     @JoinTable(
@@ -57,24 +53,22 @@ public class User {
     public User() {
     }
 
-    public User(String userName, String firstName, String lastName, String email, STATUS status) {
-        setEmail(email);
+    public User(String userName, String firstName, String lastName) {
         setUserName(userName);
         setFirstName(firstName);
         setLastName(lastName);
-        setStatus(status);
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder().append("User{ id = ");
-        sb.append(id).append(", username = ").append(userName);
+        StringBuilder sb = new StringBuilder();
+        sb.append("User\n{   id = ").append(id);
+        sb.append("\n   , username = ").append(userName);
         sb.append(", lastName = " ).append(lastName);
         sb.append(", firstName = ").append(firstName);
-        sb.append("\n, email = ").append(email);
-        sb.append("\n, address = ").append(address.toString());
-        sb.append("\n, groups = ").append(groups.toString());
-        return sb.append("}").toString();
+        sb.append("\n   , contactDetail = ").append(contactDetail);
+        sb.append("\n   , groups = ").append(groups.toString());
+        return sb.append("\n}").toString();
     }
 
     public STATUS getStatus() {
@@ -126,27 +120,11 @@ public class User {
         this.lastName = lastName;
     }
 
-    public String getEmail() {
-        return email;
+    public ContactDetail getContactDetail() {
+        return contactDetail;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPhoneNum() {
-        return phoneNum;
-    }
-
-    public void setPhoneNum(String phoneNum) {
-        this.phoneNum = phoneNum;
-    }
-
-    public Address getAddress() {
-        return address;
-    }
-
-    public void setAddress(Address address) {
-        this.address = address;
+    public void setContactDetail(ContactDetail contactDetail) {
+        this.contactDetail = contactDetail;
     }
 }

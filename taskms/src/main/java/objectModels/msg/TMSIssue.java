@@ -23,32 +23,44 @@ public class TMSIssue extends TMSMessage{
 
     // group that receive this issue
     @ManyToOne
-    @JoinColumn(name = "group_id")
-    private HierarchyGroup recipient;
+    private HierarchyGroup recipientGroup;
+
+    @ManyToOne
+    private HierarchyGroup senderGroup;
 
     public TMSIssue() {}
-    public TMSIssue(User sender, Date sentDate, String title, String content, HierarchyGroup toGroup) {
+    public TMSIssue(User sender, Date sentDate, String title, String content, HierarchyGroup fromGroup, HierarchyGroup toGroup) {
         super(sender, sentDate, title, content);
-        setRecipient(toGroup);
+        setRecipientGroup(toGroup);
+        setSenderGroup(fromGroup);
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("TMSTask{ id =").append(getId());
-        sb.append(", title = ").append(getTitle()).append(", content = ").append(getContent());
-        sb.append("\n, sender = ").append(getSender());
-        sb.append("\n, status = ").append(status);
-        sb.append("\n, recipient = ").append(recipient);
+        sb.append("\n   , title = ").append(getTitle()).append(", content = ").append(getContent());
+        sb.append("\n   , sender = ").append(getSender());
+        sb.append("\n   , status = ").append(status);
+        sb.append("\n   , recipientGroup = ").append(recipientGroup);
+        sb.append("\n   , senderGroup = ").append(senderGroup);
         return sb.append(" }").toString();
     }
 
-    public HierarchyGroup getRecipient() {
-        return recipient;
+    public HierarchyGroup getRecipientGroup() {
+        return recipientGroup;
     }
 
-    public void setRecipient(HierarchyGroup recipient) {
-        this.recipient = recipient;
+    public void setRecipientGroup(HierarchyGroup recipientGroup) {
+        this.recipientGroup = recipientGroup;
+    }
+
+    public HierarchyGroup getSenderGroup() {
+        return senderGroup;
+    }
+
+    public void setSenderGroup(HierarchyGroup senderGroup) {
+        this.senderGroup = senderGroup;
     }
 
     public STATUS getStatus() {

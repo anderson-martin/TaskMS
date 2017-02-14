@@ -26,11 +26,11 @@ public class HierarchyGroupTest {
 
     public static void persistHierarchyGroups() {
         doWithSession( session -> {
-            HierarchyGroup manager = new HierarchyGroup("Manager", HierarchyGroup.STATUS.ACTIVE);
+            HierarchyGroup manager = new HierarchyGroup("Manager");
 
-            HierarchyGroup cashier_lead = new HierarchyGroup("Cashier_Lead", HierarchyGroup.STATUS.CLOSED);
+            HierarchyGroup cashier_lead = new HierarchyGroup("Cashier_Lead");
 
-            HierarchyGroup cashiers = new HierarchyGroup("Cashiers", HierarchyGroup.STATUS.ACTIVE);
+            HierarchyGroup cashiers = new HierarchyGroup("Cashiers");
             // cashier_lead <- manager
             cashier_lead.setManagerGroup(manager);
             // cashiers <- cashier_lead
