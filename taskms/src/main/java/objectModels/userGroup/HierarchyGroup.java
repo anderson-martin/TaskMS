@@ -1,6 +1,5 @@
 package objectModels.userGroup;
 
-import config.HibernateUtil;
 import org.hibernate.Session;
 
 import javax.persistence.*;
@@ -99,18 +98,18 @@ public class HierarchyGroup {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        HierarchyGroup that = (HierarchyGroup) o;
+        HierarchyGroup group = (HierarchyGroup) o;
 
-        if (id != that.id) return false;
-        if (!name.equals(that.name)) return false;
-        return status == that.status;
+        if (id != group.id) return false;
+        if (name != null ? !name.equals(group.name) : group.name != null) return false;
+        return status == group.status;
     }
 
     @Override
     public int hashCode() {
-        int result = 31;
-        result = 31 * result + name.hashCode();
-        result = 31 * result + status.hashCode();
+        int result = (int) (id ^ (id >>> 32));
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
         return result;
     }
 }

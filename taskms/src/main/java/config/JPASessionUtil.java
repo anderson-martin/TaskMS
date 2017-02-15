@@ -1,6 +1,7 @@
 package config;
 
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import javax.persistence.EntityManager;
@@ -17,6 +18,11 @@ import java.util.function.Consumer;
 public class JPASessionUtil {
     static Map<String, EntityManagerFactory> persistenceUnits = new HashMap<>();
     private static final String DEFAULT_PERSISTENCE_UNIT = "utiljpa";
+
+    static {
+        persistenceUnits.put(DEFAULT_PERSISTENCE_UNIT,
+                Persistence.createEntityManagerFactory(DEFAULT_PERSISTENCE_UNIT));
+    }
 
     public static synchronized EntityManager getEntityManager(String persistenceUnitName) {
         if (persistenceUnits.get(persistenceUnitName) == null) {
@@ -35,9 +41,14 @@ public class JPASessionUtil {
     public static EntityManager getEntityManager() {
         return getEntityManager(DEFAULT_PERSISTENCE_UNIT);
     }
-    public static Session getSession() {
-        return getEntityManager(DEFAULT_PERSISTENCE_UNIT).unwrap(Session.class);
+//    public static Session getSession() {
+//        return getEntityManager(DEFAULT_PERSISTENCE_UNIT).unwrap(Session.class);
+//    }
+
+    public static Session getCurrentSession() {
+        return persistenceUnits.get(DEFAULT_PERSISTENCE_UNIT).unwrap(SessionFactory.class).getCurrentSession();
     }
+
 
     public static void doWithEntityManager(Consumer<EntityManager> command) {
         EntityManager em = getEntityManager();
@@ -54,7 +65,7 @@ public class JPASessionUtil {
     }
 
     public static void doWithSession(Consumer<Session> command) {
-        Session session = getSession();
+        Session session = getCurrentSession();
         Transaction tx = null;
         try {
             tx = session.beginTransaction();
@@ -63,8 +74,6 @@ public class JPASessionUtil {
         } catch (Exception ex ) {
             if(tx != null) tx.rollback();
             ex.printStackTrace();
-        } finally {
-            session.close();
         }
     }
 

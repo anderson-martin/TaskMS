@@ -1,6 +1,5 @@
 package objectModels.userGroup;
 
-import config.HibernateUtil;
 
 import javax.persistence.*;
 import java.util.ArrayList;

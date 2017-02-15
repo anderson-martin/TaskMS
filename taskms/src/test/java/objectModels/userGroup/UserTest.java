@@ -55,7 +55,7 @@ public class UserTest {
 
         HierarchyGroupTest.persistHierarchyGroups();
         UserTest.persistUsers();
-        Session session = JPASessionUtil.getSession();
+        Session session = JPASessionUtil.getCurrentSession();
         Transaction transaction = null;
 
         try {
@@ -77,8 +77,6 @@ public class UserTest {
         } catch (Exception ex) {
             if(transaction != null) transaction.rollback();
             ex.printStackTrace();
-        } finally {
-            session.close();
         }
 
     }

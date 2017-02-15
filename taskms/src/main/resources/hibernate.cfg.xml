@@ -18,9 +18,9 @@
         <property name="hbm2ddl.auto">create-drop</property>
 
         <mapping class="objectModels.userGroup.HierarchyGroup"/>
-        <mapping class="objectModels.userGroup.User"/>
-        <mapping class="objectModels.msg.TMSMessage"/>
-        <mapping class="objectModels.msg.TMSTask"/>
-        <mapping class="objectModels.msg.TMSIssue"/>
+        <!--<mapping class="objectModels.userGroup.User"/>-->
+        <!--<mapping class="objectModels.msg.TMSMessage"/>-->
+        <!--<mapping class="objectModels.msg.TMSTask"/>-->
+        <!--<mapping class="objectModels.msg.TMSIssue"/>-->
     </session-factory>
 </hibernate-configuration>
