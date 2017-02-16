@@ -9,6 +9,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 
@@ -64,7 +65,7 @@ public class JPASessionUtil {
         }
     }
 
-    public static void doWithSession(Consumer<Session> command) {
+    public static void doWithCurrentSession(Consumer<Session> command) {
         Session session = getCurrentSession();
         Transaction tx = null;
         try {
@@ -84,5 +85,26 @@ public class JPASessionUtil {
             System.err.println("Rollback of transaction failed, trace follows! ");
             rbEx.printStackTrace();
         }
+    }
+
+    public static long persist(Object object) {
+        Session session = JPASessionUtil.getCurrentSession();
+        long id = 0;
+        try {
+            session.beginTransaction();
+            id = (long) session.save(object);
+            session.getTransaction().commit();
+            return id;
+        } catch (Exception ex) {
+            rollBack(session.getTransaction());
+            throw new RuntimeException(ex);
+//            ex.printStackTrace();
+        }
+    }
+
+    public static void update(Object object) {
+        doWithCurrentSession( session -> {
+            session.merge(object);
+        });
     }
 }

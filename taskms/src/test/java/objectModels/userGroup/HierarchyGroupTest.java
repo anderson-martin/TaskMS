@@ -24,7 +24,7 @@ public class HierarchyGroupTest {
     }
 
     public static void persistHierarchyGroups() {
-        doWithSession( session -> {
+        doWithCurrentSession(session -> {
             HierarchyGroup manager = new HierarchyGroup("Manager");
 
             HierarchyGroup cashier_lead = new HierarchyGroup("Cashier_Lead");
@@ -45,7 +45,7 @@ public class HierarchyGroupTest {
 
     @AfterEach
     void clean() {
-        doWithSession( session -> {
+        doWithCurrentSession(session -> {
 //            session.createQuery("delete from HierarchyGroup").executeUpdate();
         });
     }
@@ -53,7 +53,7 @@ public class HierarchyGroupTest {
     @Test
     void testPersistingHierarchyGroup() {
         persistHierarchyGroups();
-        JPASessionUtil.doWithSession(session -> {
+        JPASessionUtil.doWithCurrentSession(session -> {
             HierarchyGroup managerGroup = findUniqueGroup(session, manager);
             assertEquals(managerGroup.getName(),  manager);
             assertEquals(managerGroup.getManagerGroup(), null);

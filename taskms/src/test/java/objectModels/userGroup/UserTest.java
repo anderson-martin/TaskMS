@@ -6,8 +6,6 @@ import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -18,7 +16,7 @@ public class UserTest {
     public static final String userName1 = "arseni";
 
     public static void persistUsers() {
-        JPASessionUtil.doWithSession(session -> {
+        JPASessionUtil.doWithCurrentSession(session -> {
             // get group and make sure they are not null
             HierarchyGroup manager = HierarchyGroupTest.findUniqueGroup(session, HierarchyGroupTest.manager);
             HierarchyGroup cashier_lead = HierarchyGroupTest.findUniqueGroup(session, HierarchyGroupTest.cashier_lead);

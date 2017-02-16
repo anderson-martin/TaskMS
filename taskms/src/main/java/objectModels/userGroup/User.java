@@ -66,7 +66,7 @@ public class User {
         sb.append(", lastName = " ).append(lastName);
         sb.append(", firstName = ").append(firstName);
         sb.append("\n   , contactDetail = ").append(contactDetail);
-        sb.append("\n   , groups = ").append(groups.toString());
+        sb.append("\n   , groups = \n").append(groups.toString());
         return sb.append("\n}").toString();
     }
 
@@ -125,5 +125,26 @@ public class User {
 
     public void setContactDetail(ContactDetail contactDetail) {
         this.contactDetail = contactDetail;
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        User user = (User) o;
+
+        if (id != user.id) return false;
+        if (userName != null ? !userName.equals(user.userName) : user.userName != null) return false;
+        if (firstName != null ? !firstName.equals(user.firstName) : user.firstName != null) return false;
+        return lastName != null ? lastName.equals(user.lastName) : user.lastName == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (id ^ (id >>> 32));
+        result = 31 * result + (userName != null ? userName.hashCode() : 0);
+        result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
+        result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
+        return result;
     }
 }

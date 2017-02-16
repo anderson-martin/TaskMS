@@ -14,25 +14,13 @@ import javax.persistence.criteria.Root;
 import java.util.*;
 
 import static config.JPASessionUtil.rollBack;
+import static config.JPASessionUtil.update;
 
 /**
  * Created by rohan on 2/14/17.
  */
 public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
-    @Override
-    public boolean isRegisteredGroup(String group_name) {
-        EntityManager em = JPASessionUtil.getEntityManager();
-        TypedQuery<Long> query  = em.createQuery(
-                "SELECT COUNT(h) FROM HierarchyGroup h WHERE h.name=:name", Long.class);
-        return query.setParameter("name", group_name).getSingleResult() == 1;
-    }
 
-    public boolean isRegisteredGroup(long id) {
-        EntityManager em = JPASessionUtil.getEntityManager();
-        TypedQuery<Long> query  = em.createQuery(
-                "SELECT COUNT(h) FROM HierarchyGroup h WHERE h.id = :id", Long.class);
-        return query.setParameter("id", id).getSingleResult() == 1;
-    }
 
     //    public static final HierarchyGroupDAO = new HierarchyGroupDAOimpl();
     private static final HierarchyGroupDAO singleInstance = new HierarchyGroupDAOimpl();
@@ -42,36 +30,29 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
     private HierarchyGroupDAOimpl(){}
 
     @Override
+    public boolean isRegisteredGroup(String group_name) {
+        EntityManager em = JPASessionUtil.getEntityManager();
+        TypedQuery<Long> query  = em.createQuery(
+                "SELECT COUNT(h) FROM HierarchyGroup h WHERE h.name=:name", Long.class);
+        return query.setParameter("name", group_name).getSingleResult() == 1;
+    }
+    @Override
+    public boolean isRegisteredGroup(long id) {
+        EntityManager em = JPASessionUtil.getEntityManager();
+        TypedQuery<Long> query  = em.createQuery(
+                "SELECT COUNT(h) FROM HierarchyGroup h WHERE h.id = :id", Long.class);
+        return query.setParameter("id", id).getSingleResult() == 1;
+    }
+
+    @Override
     public long registerGroup(HierarchyGroup group) {
         if (group.getId() != 0) throw new IllegalArgumentException("Transient object should not have id");
-        Session session = JPASessionUtil.getCurrentSession();
-        long id = 0;
-        try {
-            session.beginTransaction();
-
-            id = (long) session.save(group);
-
-            session.getTransaction().commit();
-        } catch (Exception ex) {
-            rollBack(session.getTransaction());
-            throw new RuntimeException(ex);
-//            ex.printStackTrace();
-        }
-        return id;
+        return JPASessionUtil.persist(group);
     }
 
     @Override
     public void updateGroup(HierarchyGroup group) {
-        Session session = JPASessionUtil.getCurrentSession();
-        try {
-            session.beginTransaction();
-            session.merge(group);
-            session.getTransaction().commit();
-        } catch (Exception ex) {
-            rollBack(session.getTransaction());
-            throw new RuntimeException(ex);
-//            ex.printStackTrace();
-        }
+        JPASessionUtil.update(group);
     }
 
     @Override
@@ -82,18 +63,20 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
     @Override
     public HierarchyGroup getGroup(String groupName) {
         EntityManager em = JPASessionUtil.getEntityManager();
-
         CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<HierarchyGroup> criteria = builder.createQuery(HierarchyGroup.class);
         Root<HierarchyGroup> root = criteria.from(HierarchyGroup.class);
-        criteria.select(criteria.from(HierarchyGroup.class));
-        criteria.where(builder.like(
+        criteria.select(root).where(builder.equal(
                 root.get(HierarchyGroup_.name),
                 builder.parameter(String.class, "name")
         ));
-        criteria.select(root);
-
-        return em.createQuery(criteria).setParameter("name",groupName).getSingleResult();
+        try {
+            HierarchyGroup group = em.createQuery(criteria).setParameter("name",groupName).getSingleResult();
+            return group;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
     }
 
     @Override
@@ -125,36 +108,38 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
         }
     }
 
+    /**
+     * Convert a long[] into List<Long>
+     * @param nums long[]
+     * @return List<Long>
+     */
+    private static List<Long> converts(long... nums) {
+        List<Long> longs = new ArrayList<>();
+        for(long num : nums) {
+            longs.add(num);
+        }
+        return longs;
+    }
+
     @Override
     public void setManagerGroup(long managerGroup_id, long... subordinate_ids) {
         if(subordinate_ids == null) throw new IllegalArgumentException("get a null value");
+
         Session session = JPASessionUtil.getCurrentSession();
         try {
             session.beginTransaction();
             // consider using SQL for better performance
-            Query query = session.createQuery("update HierarchyGroup hg set hg.managerGroup.id = :manager_id where hg.id in :ids");
+            Query query = session.createQuery("update HierarchyGroup hg set hg.managerGroup.id = :manager_id where hg.id IN :ids");
             query.setParameter("manager_id", managerGroup_id);
-            query.setParameter("ids", Arrays.asList(subordinate_ids));
+//            List<Long> ids = Arrays.asList(subordinate_ids);
+            query.setParameter("ids", converts(subordinate_ids));
             query.executeUpdate();
 
             session.getTransaction().commit();
         } catch (Exception ex) {
             rollBack(session.getTransaction());
-//            throw new RuntimeException(ex);
-            ex.printStackTrace();
+            throw new RuntimeException(ex);
+//            ex.printStackTrace();
         }
-    }
-
-    public static void main(String[] args) {
-        HierarchyGroupDAOimpl h = new HierarchyGroupDAOimpl();
-        System.out.println(h.registerGroup(new HierarchyGroup("dang")));
-        System.out.println(h.registerGroup(new HierarchyGroup("dangg")));
-        System.out.println(h.registerGroup(new HierarchyGroup("dangggg")));
-        System.out.println(h.registerGroup(new HierarchyGroup("danggggg")));
-        System.out.println(h.registerGroup(new HierarchyGroup("dangggggg")));
-
-
-        System.out.println(h.getGroup("dang"));
-        System.out.println(h.getGroups());
     }
 }

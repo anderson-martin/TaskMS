@@ -37,11 +37,16 @@ public interface HierarchyGroupDAO {
 
     /**
      * Get group by its id
-     * @param id
+     * @param id id of the group to be retrieved
      * @return group with given id, and null if no such group exists
      */
     HierarchyGroup getGroup(long id);
 
+    /**
+     * Get group by its name
+     * @param groupName name of the group to be retrieved
+     * @return group with given name, and null if no such group exists
+     */
     HierarchyGroup getGroup(String groupName);
 
     Set<HierarchyGroup> getGroups(HierarchyGroup.STATUS... statuses);

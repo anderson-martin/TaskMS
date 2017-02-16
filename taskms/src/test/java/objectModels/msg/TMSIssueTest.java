@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class TMSIssueTest {
     @Test
     void persistTMSIssue() {
-        JPASessionUtil.doWithSession(session -> {
+        JPASessionUtil.doWithCurrentSession(session -> {
             // group must be persisted first, then user (because user have group)
             HierarchyGroupTest.persistHierarchyGroups();
             UserTest.persistUsers();

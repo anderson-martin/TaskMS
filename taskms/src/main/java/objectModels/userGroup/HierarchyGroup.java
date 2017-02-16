@@ -88,9 +88,31 @@ public class HierarchyGroup {
         this.subordinateGroups = subordinateGroups;
     }
 
+    // this method for convenience when manipulating bidirectional relations
+    public void addSubordinateGroups(Set<HierarchyGroup> subordinateGroups) {
+        subordinateGroups.forEach( subordinateGroup -> subordinateGroup.setManagerGroup(this));
+        this.subordinateGroups = subordinateGroups;
+    }
+
     @Override
     public String toString() {
-        return "Group{ id = " + id + ", name = " + name + " }";
+        StringBuilder sb = new StringBuilder();
+        sb.append("Group{ id = ").append(id).append(", name = ").append(name);
+        sb.append("\n   , managerGroup = ");
+        if(managerGroup == null) sb.append("null");
+        else sb.append("Group{ id = ").append(managerGroup.getId()).
+                append(", name = ").append(managerGroup.getName()).append(" }");
+
+        sb.append("\n   , subordinateGroups = ");
+        if(subordinateGroups == null) sb.append("null");
+        else {
+            sb.append("[");
+            subordinateGroups.forEach( gr ->
+                    sb.append("  Group { id = ").append(gr.getId()).append(", name = ").append(gr.getName()).append("}")
+            );
+            sb.append("]");
+        }
+        return sb.append("\n}").toString();
     }
 
     @Override
