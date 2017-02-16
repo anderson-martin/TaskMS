@@ -41,7 +41,7 @@ public class User {
     @Embedded
     private ContactDetail contactDetail;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "User_HierarchyGroup",
             joinColumns = {@JoinColumn(name = "user_id")},

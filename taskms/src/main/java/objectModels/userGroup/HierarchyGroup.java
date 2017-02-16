@@ -39,7 +39,7 @@ public class HierarchyGroup {
     @JoinColumn(name = "managerGroup_id")
     private HierarchyGroup managerGroup;
 
-    @OneToMany(mappedBy = "managerGroup", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "managerGroup", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     private Set<HierarchyGroup> subordinateGroups = new HashSet<>();
 
 
