@@ -97,18 +97,12 @@ public class UserDAOimpl implements UserDAO {
 
     @Override
     public void setUserStatus(long user_id, User.STATUS status) {
-        Session session = JPASessionUtil.getCurrentSession();
-        try {
-            session.beginTransaction();
+        JPASessionUtil.doWithCurrentSession(session -> {
             Query query = session.createQuery("update User us set us.status = :status where us.id = :id");
             query.setParameter("status", status);
             query.setParameter("id", user_id);
             query.executeUpdate();
-            session.getTransaction().commit();
-        } catch (Exception ex) {
-            rollBack(session.getTransaction());
-            throw new RuntimeException(ex);
-        }
+        });
     }
 
     @Override

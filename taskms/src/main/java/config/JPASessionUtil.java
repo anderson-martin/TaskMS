@@ -59,7 +59,7 @@ public class JPASessionUtil {
             em.getTransaction().commit();
         } catch (Exception ex) {
             em.getTransaction().rollback();
-            ex.printStackTrace();
+            throw new RuntimeException(ex);
         } finally {
             em.close();
         }

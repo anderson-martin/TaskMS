@@ -9,16 +9,36 @@ import java.util.Set;
  */
 public interface TMSIssueDAO {
     /**
-     *  CRUD
-     *
-     *
+     * CRUD
      */
     long createIssue(TMSIssue issue);
+
     void updateIssue(TMSIssue issue);
 
-    TMSIssue getIssue(long id);
+    TMSIssue getIssue(long issue_id, TMSIssue.STATUS status);
 
-    // group
-    Set<TMSIssue> getGroupIssues(long group_id, TMSIssue.STATUS... issue_statuses);
-    Set<TMSIssue> getUserIssues(long user_id, TMSIssue.STATUS... issue_statuses);
+    // group, zoom for query optimization
+    Set<TMSIssue> getGroupReceivedIssues(long group_id, TMSIssue.STATUS... issue_statuses);
+
+    Set<TMSIssue> getGroupSentIssues(long group_id, TMSIssue.STATUS... issue_statuses);
+
+    Set<TMSIssue> getUserSentIssues(long user_id, TMSIssue.STATUS... issue_statuses);
+
+
+    // try the case of invalid id
+    /**
+     * Set issue status
+     * @param issue_id id of issue to be set
+     * @param status   the status to set to issue with given id
+     */
+    void setIssueStatus(long issue_id, TMSIssue.STATUS status);
+
+    /**
+     * Get status of the issue having given id
+     *
+     * @param issue_id
+     * @return TMSIssue.STATUS status of the issue having given id
+     * or null if no such issue exists
+     */
+    TMSIssue.STATUS getIssueStatus(long issue_id);
 }
