@@ -33,6 +33,7 @@ public class UserDAOimpl implements UserDAO {
 
     @Override
     public long registerUser(User user) {
+        System.out.println("vittu");
         if (user.getId() != 0) throw new IllegalArgumentException("Transient object should not have id");
         return JPASessionUtil.persist(user);
     }

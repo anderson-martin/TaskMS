@@ -70,6 +70,7 @@ public class JPASessionUtil {
         Transaction tx = null;
         try {
             tx = session.beginTransaction();
+            session.clear();
             command.accept(session);
             tx.commit();
         } catch (Exception ex ) {

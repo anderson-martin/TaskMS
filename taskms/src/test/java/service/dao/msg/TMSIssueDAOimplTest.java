@@ -48,7 +48,7 @@ class TMSIssueDAOimplTest {
         return user;
     }
 
-    public long createIssue() {
+    private long createIssue() {
         User user = null ;
         try {
             user = createUser("u1");

@@ -92,10 +92,10 @@ public class TMSIssue extends TMSMessage{
 
     @Override
     public int hashCode() {
-        int result = status.hashCode();
-        result = 31 * result + super.hashCode();
-        result = 31 * result + (recipientGroup != null ? recipientGroup.hashCode() : 0);
-        result = 31 * result + (senderGroup != null ? senderGroup.hashCode() : 0);
+        int result = super.hashCode();
+        result = 31 * result + (getStatus() != null ? getStatus().hashCode() : 0);
+        result = 31 * result + (getRecipientGroup() != null ? getRecipientGroup().hashCode() : 0);
+        result = 31 * result + (getSenderGroup() != null ? getSenderGroup().hashCode() : 0);
         return result;
     }
 }

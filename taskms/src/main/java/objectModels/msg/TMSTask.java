@@ -102,4 +102,37 @@ public class TMSTask extends TMSMessage{
     public void setRecipientGroup(HierarchyGroup recipientGroup) {
         this.recipientGroup = recipientGroup;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        TMSTask task = (TMSTask) o;
+        if (getId() != task.getId()) return false;
+        if (getSentDate() != null ? !getSentDate().equals(task.getSentDate()) : task.getSentDate() != null)
+            return false;
+        if (getTitle() != null ? !getTitle().equals(task.getTitle()) : task.getTitle() != null) return false;
+        if (getContent() != null ? !getContent().equals(task.getContent()) : task.getContent() != null) return false;
+        if (getSender() != null ? !getSender().equals(task.getSender()) : task.getSender() != null) return  false;
+        if (getStatus() != task.getStatus()) return false;
+        if (getDueDate() != null ? !getDueDate().equals(task.getDueDate()) : task.getDueDate() != null) return false;
+        if (getRecipients() != null ? !getRecipients().equals(task.getRecipients()) : task.getRecipients() != null)
+            return false;
+        if (getSenderGroup() != null ? !getSenderGroup().equals(task.getSenderGroup()) : task.getSenderGroup() != null)
+            return false;
+        return getRecipientGroup() != null ? getRecipientGroup().equals(task.getRecipientGroup()) : task.getRecipientGroup() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (getStatus() != null ? getStatus().hashCode() : 0);
+        result = 31 * result + (getDueDate() != null ? getDueDate().hashCode() : 0);
+        result = 31 * result + (getRecipients() != null ? getRecipients().hashCode() : 0);
+        result = 31 * result + (getSenderGroup() != null ? getSenderGroup().hashCode() : 0);
+        result = 31 * result + (getRecipientGroup() != null ? getRecipientGroup().hashCode() : 0);
+        return result;
+    }
 }
