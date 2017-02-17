@@ -107,4 +107,10 @@ public class JPASessionUtil {
             session.merge(object);
         });
     }
+
+    public static void delete(Object object) {
+        doWithCurrentSession( session ->  {
+            session.delete(object);
+        });
+    }
 }

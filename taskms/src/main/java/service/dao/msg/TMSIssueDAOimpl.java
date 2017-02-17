@@ -17,7 +17,23 @@ import java.util.Set;
 /**
  * Created by rohan on 2/16/17.
  */
-public class TMSIssueDAOimpl implements TMSIssueDAO{
+public class TMSIssueDAOimpl implements TMSIssueDAO {
+    private static TMSIssueDAO singleInstance = new TMSIssueDAOimpl();
+
+    public static TMSIssueDAO getSingleInstance() {
+        return singleInstance;
+    }
+
+    private TMSIssueDAOimpl() {
+    }
+
+    @Override
+    public TMSIssue deleteIssue(long issue_id) {
+        TMSIssue deleted = JPASessionUtil.getEntityManager().find(TMSIssue.class, issue_id);
+        JPASessionUtil.delete(deleted);
+        return deleted;
+    }
+
     @Override
     public long createIssue(TMSIssue issue) {
         return JPASessionUtil.persist(issue);
@@ -35,7 +51,7 @@ public class TMSIssueDAOimpl implements TMSIssueDAO{
 
     @Override
     public void setIssueStatus(long issue_id, TMSIssue.STATUS status) {
-        JPASessionUtil.doWithEntityManager( em -> {
+        JPASessionUtil.doWithEntityManager(em -> {
             Query query = em.createQuery("update TMSIssue ts set ts.status =:status where ts.id = :id");
             query.setParameter("status", status);
             query.setParameter("id", issue_id);
@@ -101,7 +117,7 @@ public class TMSIssueDAOimpl implements TMSIssueDAO{
             throw new RuntimeException(ex);
         }
     }
-git
+
     @Override
     public Set<TMSIssue> getUserSentIssues(long user_id, TMSIssue.STATUS... issue_statuses) {
         Session session = JPASessionUtil.getCurrentSession();

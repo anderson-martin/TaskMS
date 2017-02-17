@@ -8,13 +8,18 @@ import java.util.Set;
  * Created by rohan on 2/14/17.
  */
 public interface TMSIssueDAO {
-    /**
-     * CRUD
-     */
     long createIssue(TMSIssue issue);
+
+    TMSIssue deleteIssue(long issue_id);
 
     void updateIssue(TMSIssue issue);
 
+    /**
+     * Get issue by its id
+     * @param issue_id
+     * @return TMSIssue with given id,
+     * or null if such issue does not exist
+     */
     TMSIssue getIssue(long issue_id);
 
     // group, zoom for query optimization

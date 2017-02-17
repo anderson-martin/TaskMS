@@ -19,7 +19,7 @@ public abstract class TMSMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private long id;
 
     @Column(nullable = false)
     private Date sentDate;
@@ -41,11 +41,11 @@ public abstract class TMSMessage {
         setTitle(title);
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -79,5 +79,30 @@ public abstract class TMSMessage {
 
     public void setSender(User sender) {
         this.sender = sender;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TMSMessage that = (TMSMessage) o;
+
+        if (getId() != that.getId()) return false;
+        if (getSentDate() != null ? !getSentDate().equals(that.getSentDate()) : that.getSentDate() != null)
+            return false;
+        if (getTitle() != null ? !getTitle().equals(that.getTitle()) : that.getTitle() != null) return false;
+        if (getContent() != null ? !getContent().equals(that.getContent()) : that.getContent() != null) return false;
+        return getSender() != null ? getSender().equals(that.getSender()) : that.getSender() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (getId() ^ (getId() >>> 32));
+        result = 31 * result + (getSentDate() != null ? getSentDate().hashCode() : 0);
+        result = 31 * result + (getTitle() != null ? getTitle().hashCode() : 0);
+        result = 31 * result + (getContent() != null ? getContent().hashCode() : 0);
+        result = 31 * result + (getSender() != null ? getSender().hashCode() : 0);
+        return result;
     }
 }

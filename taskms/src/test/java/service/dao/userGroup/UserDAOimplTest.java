@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Created by rohan on 2/16/17.
  */
-class UserDAOimplTest {
+public class UserDAOimplTest {
 
     public static void cleanUserTable() {
         JPASessionUtil.doWithCurrentSession(session -> {
@@ -36,15 +36,16 @@ class UserDAOimplTest {
     public HierarchyGroupDAO hierarchyGroupDAO = HierarchyGroupDAOimpl.getSingleInstance();
 
 
-    private final String userName = "dangng";
+    private static final String userName = "dangng";
 
     // create user without identifier
-    private User createUser() {
+    public static User createUser() {
         User user = new User(userName, "dang", "nguyen");
         ContactDetail contactDetail = new ContactDetail("lintu", "02660", "ESPOO", "nguyen.h.dang.1001@gmail.com", "0465672638");
         user.setContactDetail(contactDetail);
         return user;
     }
+
 
     @Test
     void registerUserWithNoGroup() {

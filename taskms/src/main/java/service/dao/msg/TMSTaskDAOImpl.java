@@ -13,6 +13,11 @@ import java.util.Set;
  * Created by rohan on 2/16/17.
  */
 public class TMSTaskDAOImpl implements TMSTaskDAO {
+
+    private static TMSTaskDAO singleInstance = new TMSTaskDAOImpl();
+    public static TMSTaskDAO getSingleInstance() {return singleInstance;}
+    private TMSTaskDAOImpl() {}
+
     @Override
     public long createTask(TMSTask task) {
         return JPASessionUtil.persist(task);

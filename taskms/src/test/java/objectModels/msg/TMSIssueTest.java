@@ -45,7 +45,7 @@ class TMSIssueTest {
             // remove the object from session cash
             session.evict(tmsIssue);
 
-            int id = tmsIssue.getId();
+            long id = tmsIssue.getId();
 
             Query<TMSIssue> getIssue = session.createQuery("from TMSIssue ts where ts.id = :id", TMSIssue.class);
 

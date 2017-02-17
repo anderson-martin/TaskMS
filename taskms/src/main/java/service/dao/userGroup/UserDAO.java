@@ -5,7 +5,7 @@ import objectModels.userGroup.User;
 
 import java.util.Set;
 
-interface UserDAO {
+public interface UserDAO {
     /**
      * crud
      * create:

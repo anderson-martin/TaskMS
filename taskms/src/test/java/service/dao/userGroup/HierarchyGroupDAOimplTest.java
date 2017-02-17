@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Created by rohan on 2/14/17.
  */
 
-class HierarchyGroupDAOimplTest {
+public class HierarchyGroupDAOimplTest {
     private HierarchyGroupDAO groupDAO = HierarchyGroupDAOimpl.getSingleInstance();
 
     public static void cleanGroupTable() {

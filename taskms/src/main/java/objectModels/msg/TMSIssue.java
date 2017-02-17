@@ -70,4 +70,32 @@ public class TMSIssue extends TMSMessage{
     public void setStatus(STATUS status) {
         this.status = status;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TMSIssue tmsIssue = (TMSIssue) o;
+
+        if (getId() != tmsIssue.getId()) return false;
+        if (getSentDate() != null ? !getSentDate().equals(tmsIssue.getSentDate()) : tmsIssue.getSentDate() != null)
+            return false;
+        if (getTitle() != null ? !getTitle().equals(tmsIssue.getTitle()) : tmsIssue.getTitle() != null) return false;
+        if (getContent() != null ? !getContent().equals(tmsIssue.getContent()) : tmsIssue.getContent() != null) return false;
+        if (getSender() != null ? !getSender().equals(tmsIssue.getSender()) : tmsIssue.getSender() != null) return  false;
+        if (status != tmsIssue.status) return false;
+        if (recipientGroup != null ? !recipientGroup.equals(tmsIssue.recipientGroup) : tmsIssue.recipientGroup != null)
+            return false;
+        return senderGroup != null ? senderGroup.equals(tmsIssue.senderGroup) : tmsIssue.senderGroup == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = status.hashCode();
+        result = 31 * result + super.hashCode();
+        result = 31 * result + (recipientGroup != null ? recipientGroup.hashCode() : 0);
+        result = 31 * result + (senderGroup != null ? senderGroup.hashCode() : 0);
+        return result;
+    }
 }
