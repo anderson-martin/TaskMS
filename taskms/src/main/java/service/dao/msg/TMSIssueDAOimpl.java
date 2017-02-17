@@ -3,8 +3,6 @@ package service.dao.msg;
 import config.JPASessionUtil;
 import objectModels.msg.TMSIssue;
 import objectModels.msg.TMSIssue_;
-import objectModels.userGroup.User;
-import objectModels.userGroup.User_;
 import org.hibernate.Session;
 
 import javax.persistence.EntityManager;
@@ -31,8 +29,8 @@ public class TMSIssueDAOimpl implements TMSIssueDAO{
     }
 
     @Override
-    public TMSIssue getIssue(long issue_id, TMSIssue.STATUS status) {
-        return null;
+    public TMSIssue getIssue(long issue_id) {
+        return JPASessionUtil.getEntityManager().find(TMSIssue.class, issue_id);
     }
 
     @Override
@@ -103,7 +101,7 @@ public class TMSIssueDAOimpl implements TMSIssueDAO{
             throw new RuntimeException(ex);
         }
     }
-
+git
     @Override
     public Set<TMSIssue> getUserSentIssues(long user_id, TMSIssue.STATUS... issue_statuses) {
         Session session = JPASessionUtil.getCurrentSession();

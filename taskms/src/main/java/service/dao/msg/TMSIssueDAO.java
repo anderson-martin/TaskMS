@@ -15,7 +15,7 @@ public interface TMSIssueDAO {
 
     void updateIssue(TMSIssue issue);
 
-    TMSIssue getIssue(long issue_id, TMSIssue.STATUS status);
+    TMSIssue getIssue(long issue_id);
 
     // group, zoom for query optimization
     Set<TMSIssue> getGroupReceivedIssues(long group_id, TMSIssue.STATUS... issue_statuses);

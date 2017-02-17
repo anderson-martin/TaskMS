@@ -18,7 +18,7 @@ public interface TMSTaskDAO {
 
     /**
      * Get all the task sent by member of the group identified by id
-     * @param gruop_id id of the group
+     * @param group_id id of the group
      * @return a set of tasks sent by members of the group identifed by id
      */
     Set<TMSTask> getGroupSentTasks(long group_id, TMSTask.STATUS... statuses);
@@ -29,6 +29,6 @@ public interface TMSTaskDAO {
 
     Set<TMSTask> getUserReceivedTasks(long user_id, TMSTask.STATUS... statuses);
     Set<TMSTask> getUserSentTasks(long user_id, TMSTask.STATUS... statuses);
-    Set<TMSTask> getUserTask(long user_id, TMSTask.STATUS... statuses);
+    Set<TMSTask> getUserTasks(long user_id, TMSTask.STATUS... statuses);
 
 }
