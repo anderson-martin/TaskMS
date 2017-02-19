@@ -19,10 +19,12 @@ public class HierarchyGroupDAOimplTest {
 
     public static void cleanGroupTable() {
         JPASessionUtil.doWithCurrentSession(session -> {
-            List<HierarchyGroup> groups =session.createQuery("from HierarchyGroup ", HierarchyGroup.class).getResultList();
-            groups.forEach(group -> System.out.println(group));
+            List<HierarchyGroup> groups = session.createQuery("from HierarchyGroup ", HierarchyGroup.class).getResultList();
             // manager group is the owning side
-            groups.forEach(group -> group.setManagerGroup( (HierarchyGroup) null));
+            groups.forEach(group -> {
+                group.setManagerGroup(null);
+                group.setSubordinateGroups(null);
+            });
             session.flush();
             session.createQuery("delete from HierarchyGroup ").executeUpdate();
         });

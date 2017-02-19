@@ -24,6 +24,13 @@ public class UserBasicView {
     private String lastName;
 
     public UserBasicView() {}
+    public UserBasicView(long id, String userName, String firstName, String lastName) {
+        setId(id);
+        setFirstName(firstName);
+        setLastName(lastName);
+        setUserName(userName);
+    }
+
 
     @Override
     public String toString() {
@@ -61,5 +68,29 @@ public class UserBasicView {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        UserBasicView that = (UserBasicView) o;
+
+        if (getId() != that.getId()) return false;
+        if (getUserName() != null ? !getUserName().equals(that.getUserName()) : that.getUserName() != null)
+            return false;
+        if (getFirstName() != null ? !getFirstName().equals(that.getFirstName()) : that.getFirstName() != null)
+            return false;
+        return getLastName() != null ? getLastName().equals(that.getLastName()) : that.getLastName() == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (getId() ^ (getId() >>> 32));
+        result = 31 * result + (getUserName() != null ? getUserName().hashCode() : 0);
+        result = 31 * result + (getFirstName() != null ? getFirstName().hashCode() : 0);
+        result = 31 * result + (getLastName() != null ? getLastName().hashCode() : 0);
+        return result;
     }
 }

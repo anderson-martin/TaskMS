@@ -1,13 +1,16 @@
 package service.dao.userGroup;
 
 import config.JPASessionUtil;
+import objectModels.basicViews.GroupBasicView;
 import objectModels.basicViews.UserBasicView;
 import objectModels.userGroup.ContactDetail;
 import objectModels.userGroup.HierarchyGroup;
 import objectModels.userGroup.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.annotation.Testable;
 
+import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,7 +59,6 @@ public class UserDAOimplTest {
         assertTrue(user.equals(userDAO.getUser(userName)));
         System.out.println(user);
     }
-
     @Test
     void registerUserWithOneGroup() {
         final User user = createUser();
@@ -70,7 +72,6 @@ public class UserDAOimplTest {
         assertTrue(registeredUser.getGroups().size() == 1);
         assertTrue(registeredUser.getGroups().contains(registeredGroup1));
     }
-
     @Test
     void registerUserWithManyGroups() {
         final User user = createUser();
@@ -90,7 +91,6 @@ public class UserDAOimplTest {
         assertTrue(registeredUser.getGroups().contains(registeredGroup2));
         assertTrue(registeredUser.getGroups().contains(registeredGroup3));
     }
-
     @Test
     void registerUserInvalidGroup() {
         final User user = createUser();
@@ -141,7 +141,6 @@ public class UserDAOimplTest {
         assertNull(userDAO.getUser(-10));
         assertNull(userDAO.getUser(10));
     }
-
     @Test
     void getUserByUserName() {
         // non existent users
@@ -150,15 +149,15 @@ public class UserDAOimplTest {
         assertNull(userDAO.getUser("   "));
         assertNull(userDAO.getUser("?*^*%%#$)#%"));
     }
-
     @Test
     void getUserIdByUserName() {
         User user = createUser();
         userDAO.registerUser(user);
         assertEquals(userDAO.getUserIdByUserName(user.getUserName()), user.getId());
-        System.out.println(userDAO.getUserIdByUserName("vittu perkele"));
-    }
 
+
+        assertThrows( IllegalArgumentException.class, () -> userDAO.getUserIdByUserName("vittu perkele"));
+    }
     @Test
     void getUsers() {
         User user1 = createUser();
@@ -188,12 +187,15 @@ public class UserDAOimplTest {
         assertTrue(userDAO.getUsers(User.STATUS.HR_MANAGER).size() == 2);
         assertTrue(userDAO.getUsers().size() == 3);
     }
-
     @Test
     void getUserStatus() {
         User user = createUser();
         userDAO.registerUser(user);
         assertTrue(user.getStatus() == userDAO.getUserStatus(user.getId()));
+    }
+
+    private UserBasicView getBasicViewForUser(User user) {
+        return new UserBasicView(user.getId(), user.getUserName(), user.getFirstName(), user.getLastName());
     }
 
     @Test
@@ -206,61 +208,8 @@ public class UserDAOimplTest {
             assertTrue(status == userDAO.getUserStatus(user.getId()));
         }
     }
-
     @Test
-    void getUsersInGroupByName() {
-        User user1 = createUser();
-        User user2 = createUser();
-        User user3 = createUser();
-        user1.setUserName("a");
-        user2.setUserName("b");
-        user3.setUserName("c");
-
-        HierarchyGroup g1 = new HierarchyGroup("g1");
-        HierarchyGroup g2 = new HierarchyGroup("g2");
-        user2.getGroups().add(g2);
-        user3.getGroups().add(g2);
-
-        hierarchyGroupDAO.registerGroup(g1);
-        hierarchyGroupDAO.registerGroup(g2);
-        List<User> users = Arrays.asList(user1, user2, user3);
-        users.forEach(us -> userDAO.registerUser(us));
-        // no STATUS argument
-
-        Set<User> usersInG1 = userDAO.getUsersInGroup(g1.getName());
-        Set<User> usersInG2 = userDAO.getUsersInGroup(g2.getName());
-        assertTrue(usersInG1.isEmpty());
-        assertTrue(usersInG2.size() == 2);
-        assertTrue(usersInG2.contains(user2));
-        assertTrue(usersInG2.contains(user3));
-
-        Set<User> usersInNonexistentGroup = userDAO.getUsersInGroup("this group does not exist");
-        assertTrue(usersInNonexistentGroup.isEmpty());
-
-        // with STATUS argument
-        user1.setStatus(User.STATUS.CLOSED);
-        user2.setStatus(User.STATUS.ACTIVE);
-        user3.setStatus(User.STATUS.HR_MANAGER);
-        users.forEach(user -> {
-            user.getGroups().add(g2);
-            userDAO.updateUser(user);
-        });
-
-        final Set<User> userInG2_CLOSED = userDAO.getUsersInGroup(g2.getName(), User.STATUS.CLOSED);
-        final Set<User> userInG2_ACTIVE = userDAO.getUsersInGroup(g2.getName(), User.STATUS.ACTIVE);
-        final Set<User> userInG2_HR = userDAO.getUsersInGroup(g2.getName(), User.STATUS.HR_MANAGER);
-
-        assertTrue(userInG2_ACTIVE.size() == 1);
-        assertTrue(userInG2_CLOSED.size() == 1);
-        assertTrue(userInG2_HR.size() == 1);
-        assertTrue(userInG2_CLOSED.contains(user1));
-        assertTrue(userInG2_ACTIVE.contains(user2));
-        assertTrue(userInG2_HR.contains(user3));
-    }
-
-
-    @Test
-    void getUsersInGroupByID() {
+    void testGetUsersInGroup_FullView() {
         User user1 = createUser();
         User user2 = createUser();
         User user3 = createUser();
@@ -280,14 +229,14 @@ public class UserDAOimplTest {
         users.forEach(us -> userDAO.registerUser(us));
         // no STATUS argument
 
-        Set<User> usersInG1 = userDAO.getUsersInGroup(g1.getId());
-        Set<User> usersInG2 = userDAO.getUsersInGroup(g2.getId());
+        Set<User> usersInG1 = userDAO.getUsersInGroup(g1.getId(), User.class);
+        Set<User> usersInG2 = userDAO.getUsersInGroup(g2.getId(), User.class);
         assertTrue(usersInG1.isEmpty());
         assertTrue(usersInG2.size() == 2);
         assertTrue(usersInG2.contains(user2));
         assertTrue(usersInG2.contains(user3));
 
-        Set<User> usersInNonexistentGroup = userDAO.getUsersInGroup(Long.MAX_VALUE); // example of non existing id
+        Set<User> usersInNonexistentGroup = userDAO.getUsersInGroup(Long.MAX_VALUE, User.class); // example of non existing id
         assertTrue(usersInNonexistentGroup.isEmpty());
 
         // with STATUS argument
@@ -299,9 +248,9 @@ public class UserDAOimplTest {
             userDAO.updateUser(user);
         });
 
-        final Set<User> userInG2_CLOSED = userDAO.getUsersInGroup(g2.getId(), User.STATUS.CLOSED);
-        final Set<User> userInG2_ACTIVE = userDAO.getUsersInGroup(g2.getId(), User.STATUS.ACTIVE);
-        final Set<User> userInG2_HR = userDAO.getUsersInGroup(g2.getId(), User.STATUS.HR_MANAGER);
+        final Set<User> userInG2_CLOSED = userDAO.getUsersInGroup(g2.getId(), User.class, User.STATUS.CLOSED);
+        final Set<User> userInG2_ACTIVE = userDAO.getUsersInGroup(g2.getId(), User.class, User.STATUS.ACTIVE);
+        final Set<User> userInG2_HR = userDAO.getUsersInGroup(g2.getId(), User.class, User.STATUS.HR_MANAGER);
 
         assertTrue(userInG2_ACTIVE.size() == 1);
         assertTrue(userInG2_CLOSED.size() == 1);
@@ -310,14 +259,8 @@ public class UserDAOimplTest {
         assertTrue(userInG2_ACTIVE.contains(user2));
         assertTrue(userInG2_HR.contains(user3));
     }
-
     @Test
-    void getUsersInGroupInValidGroup() {
-        System.out.println(userDAO.getUsersInGroup(10));
-    }
-
-    @Test
-    void getUsersInGroupWithView() {
+    void testGetUsersInGroup_IdView() {
         User user1 = createUser();
         User user2 = createUser();
         User user3 = createUser();
@@ -327,7 +270,7 @@ public class UserDAOimplTest {
 
         HierarchyGroup g1 = new HierarchyGroup("g1");
         HierarchyGroup g2 = new HierarchyGroup("g2");
-        // group 1 no user, group 2 two user
+        // group1 have 2 user, where as group 2 have no user
         user2.getGroups().add(g2);
         user3.getGroups().add(g2);
 
@@ -339,16 +282,108 @@ public class UserDAOimplTest {
 
         Set<Long> usersInG1 = userDAO.getUsersInGroup(g1.getId(), Long.class);
         Set<Long> usersInG2 = userDAO.getUsersInGroup(g2.getId(), Long.class);
-        Set<UserBasicView> usersInG2BasicView = userDAO.getUsersInGroup(g2.getId(), UserBasicView.class);
         assertTrue(usersInG1.isEmpty());
         assertTrue(usersInG2.size() == 2);
         assertTrue(usersInG2.contains(user2.getId()));
         assertTrue(usersInG2.contains(user3.getId()));
-        assertTrue(usersInG2BasicView.size() == 2);
+
+        Set<Long> usersInNonexistentGroup = userDAO.getUsersInGroup(Long.MAX_VALUE, Long.class); // example of non existing id
+        assertTrue(usersInNonexistentGroup.isEmpty());
+
+        // with STATUS argument, all group are in g2
+        user1.setStatus(User.STATUS.CLOSED);
+        user2.setStatus(User.STATUS.ACTIVE);
+        user3.setStatus(User.STATUS.HR_MANAGER);
+        users.forEach(user -> {
+            user.getGroups().add(g2);
+            userDAO.updateUser(user);
+        });
+
+        final Set<Long> userInG2_CLOSED = userDAO.getUsersInGroup(g2.getId(), Long.class, User.STATUS.CLOSED);
+        final Set<Long> userInG2_ACTIVE = userDAO.getUsersInGroup(g2.getId(), Long.class, User.STATUS.ACTIVE);
+        final Set<Long> userInG2_HR = userDAO.getUsersInGroup(g2.getId(), Long.class, User.STATUS.HR_MANAGER);
+
+        assertTrue(userInG2_ACTIVE.size() == 1);
+        assertTrue(userInG2_CLOSED.size() == 1);
+        assertTrue(userInG2_HR.size() == 1);
+        assertTrue(userInG2_CLOSED.contains(user1.getId()));
+        assertTrue(userInG2_ACTIVE.contains(user2.getId()));
+        assertTrue(userInG2_HR.contains(user3.getId()));
+    }
+    @Test
+    void testGetUsersInGroup_BasicView() {
+        User user1 = createUser();
+        User user2 = createUser();
+        User user3 = createUser();
+        user1.setUserName("a");
+        user2.setUserName("b");
+        user3.setUserName("c");
+
+        HierarchyGroup g1 = new HierarchyGroup("g1");
+        HierarchyGroup g2 = new HierarchyGroup("g2");
+        // group2 have 2 user, where as group 1 have no user
+        user2.getGroups().add(g2);
+        user3.getGroups().add(g2);
+
+        hierarchyGroupDAO.registerGroup(g1);
+        hierarchyGroupDAO.registerGroup(g2);
+        List<User> users = Arrays.asList(user1, user2, user3);
+        users.forEach(us -> userDAO.registerUser(us));
+
+        // no STATUS argument
+
+        Set<UserBasicView> usersInG1 = userDAO.getUsersInGroup(g1.getId(), UserBasicView.class);
+        Set<UserBasicView> usersInG2 = userDAO.getUsersInGroup(g2.getId(), UserBasicView.class);
+        assertTrue(usersInG1.isEmpty());
+        assertTrue(usersInG2.size() == 2);
+        assertTrue(usersInG2.contains(getBasicViewForUser(user2)));
+        assertTrue(usersInG2.contains(getBasicViewForUser(user3)));
+
+        // INVALID groupID
+        Set<UserBasicView> usersInNonexistentGroup = userDAO.getUsersInGroup(Long.MAX_VALUE, UserBasicView.class); // example of non existing id
+        assertTrue(usersInNonexistentGroup.isEmpty());
+
+        // with STATUS argument, all group are in g2
+        user1.setStatus(User.STATUS.CLOSED);
+        user2.setStatus(User.STATUS.ACTIVE);
+        user3.setStatus(User.STATUS.HR_MANAGER);
+        users.forEach(user -> {
+            user.getGroups().add(g2);
+            userDAO.updateUser(user);
+        });
+
+        final Set<UserBasicView> userInG2_CLOSED = userDAO.getUsersInGroup(g2.getId(), UserBasicView.class, User.STATUS.CLOSED);
+        final Set<UserBasicView> userInG2_ACTIVE = userDAO.getUsersInGroup(g2.getId(), UserBasicView.class, User.STATUS.ACTIVE);
+        final Set<UserBasicView> userInG2_HR = userDAO.getUsersInGroup(g2.getId(), UserBasicView.class, User.STATUS.HR_MANAGER);
+
+        assertTrue(userInG2_ACTIVE.size() == 1);
+        assertTrue(userInG2_CLOSED.size() == 1);
+        assertTrue(userInG2_HR.size() == 1);
+        assertTrue(userInG2_CLOSED.contains(getBasicViewForUser(user1)));
+        assertTrue(userInG2_ACTIVE.contains(getBasicViewForUser(user2)));
+        assertTrue(userInG2_HR.contains(getBasicViewForUser(user3)));
+    }
+    @Test
+    void getUsersInGroup_InValidGroupId_allView() {
+        assertTrue(userDAO.getUsersInGroup(10, User.class).isEmpty());
+        assertTrue(userDAO.getUsersInGroup(10, Long.class).isEmpty());
+        assertTrue(userDAO.getUsersInGroup(10, UserBasicView.class).isEmpty());
+        assertTrue(userDAO.getUsersInGroup(10, User.class, User.STATUS.CLOSED).isEmpty());
+        assertTrue(userDAO.getUsersInGroup(10, Long.class, User.STATUS.HR_MANAGER).isEmpty());
+        assertTrue(userDAO.getUsersInGroup(10, UserBasicView.class, User.STATUS.ACTIVE).isEmpty());
+    }
+    @Test
+    void getUsersInGroup_invalidView() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            userDAO.getUsersInGroup(10, Object.class);
+            userDAO.getUsersInGroup(10, String.class);
+            userDAO.getUsersInGroup(10, Integer.class);
+            userDAO.getUsersInGroup(10, Set.class);
+        });
     }
 
     @Test
-    void getUserBelongingToManyGroup() {
+    void getUserInGroup_oneUserBelongsToManyGroup() {
         User user1 = createUser();
         User user2 = createUser();
         HierarchyGroup g1 = new HierarchyGroup("g1");
@@ -364,9 +399,9 @@ public class UserDAOimplTest {
         userDAO.registerUser(user1);
         userDAO.registerUser(user2);
 
-        Set<User> users_in_g1 = userDAO.getUsersInGroup(g1.getId());
-        Set<User> users_in_g2 = userDAO.getUsersInGroup(g2.getId());
-        Set<User> users_in_g3 = userDAO.getUsersInGroup(g3.getId());
+        Set<User> users_in_g1 = userDAO.getUsersInGroup(g1.getId(), User.class);
+        Set<User> users_in_g2 = userDAO.getUsersInGroup(g2.getId(), User.class);
+        Set<User> users_in_g3 = userDAO.getUsersInGroup(g3.getId(), User.class);
 
         assertTrue(users_in_g1.size() == 1);
         assertTrue(users_in_g1.contains(user1));
@@ -378,7 +413,7 @@ public class UserDAOimplTest {
     }
 
     @Test
-    void getGroupsForUser() {
+    void getGroupsForUser_fullView() {
         User user = createUser();
         HierarchyGroup g1 = new HierarchyGroup("g1");
         HierarchyGroup g2 = new HierarchyGroup("g2");
@@ -386,13 +421,42 @@ public class UserDAOimplTest {
         hierarchyGroupDAO.registerGroup(g2);
         user.setGroups(new HashSet<>(Arrays.asList(g1, g2)));
         userDAO.registerUser(user);
-        Set<HierarchyGroup> groups = userDAO.getGroupsForUser(user.getId());
+        Set<HierarchyGroup> groups = userDAO.getGroupsForUser(user.getId(), HierarchyGroup.class);
         assertTrue(groups.size() == 2);
         assertTrue(groups.contains(g1));
         assertTrue(groups.contains(g2));
     }
-
-
+    @Test
+    void getGroupsForUser_idView() {
+        User user = createUser();
+        HierarchyGroup g1 = new HierarchyGroup("g1");
+        HierarchyGroup g2 = new HierarchyGroup("g2");
+        hierarchyGroupDAO.registerGroup(g1);
+        hierarchyGroupDAO.registerGroup(g2);
+        user.setGroups(new HashSet<>(Arrays.asList(g1, g2)));
+        userDAO.registerUser(user);
+        Set<Long> groups = userDAO.getGroupsForUser(user.getId(), Long.class);
+        assertTrue(groups.size() == 2);
+        assertTrue(groups.contains(g1.getId()));
+        assertTrue(groups.contains(g2.getId()));
+    }
+    @Test
+    void getGroupsForUser_basicView() {
+        User user = createUser();
+        HierarchyGroup g1 = new HierarchyGroup("g1");
+        HierarchyGroup g2 = new HierarchyGroup("g2");
+        hierarchyGroupDAO.registerGroup(g1);
+        hierarchyGroupDAO.registerGroup(g2);
+        user.setGroups(new HashSet<>(Arrays.asList(g1, g2)));
+        userDAO.registerUser(user);
+        Set<GroupBasicView> groups = userDAO.getGroupsForUser(user.getId(), GroupBasicView.class);
+        assertTrue(groups.size() == 2);
+        assertTrue(groups.contains(getBasicViewForGroup(g1)));
+        assertTrue(groups.contains(getBasicViewForGroup(g2)));
+    }
+    private GroupBasicView getBasicViewForGroup(HierarchyGroup group) {
+        return new GroupBasicView(group.getId(), group.getName(), group.getStatus());
+    }
     @Test
     void addUserToGroup() {
         User user = createUser();
@@ -400,11 +464,10 @@ public class UserDAOimplTest {
         hierarchyGroupDAO.registerGroup(group);
         userDAO.registerUser(user);
         userDAO.addUserToGroup(group.getId(), user.getId());
-        Set<HierarchyGroup> groups = userDAO.getGroupsForUser(user.getId());
+        Set<HierarchyGroup> groups = userDAO.getGroupsForUser(user.getId(), HierarchyGroup.class);
         assertTrue(groups.size() == 1);
         assertTrue(groups.contains(group));
     }
-
     @Test
     void removeUserFromGroup() {
         User user = createUser();
@@ -414,10 +477,9 @@ public class UserDAOimplTest {
         userDAO.addUserToGroup(group.getId(), user.getId());
         // remove user
         userDAO.removeUserFromGroup(group.getId(), user.getId());
-        assertTrue(userDAO.getGroupsForUser(user.getId()).isEmpty());
+        assertTrue(userDAO.getGroupsForUser(user.getId(), HierarchyGroup.class).isEmpty());
 
     }
-
     @Test
     void removeAllUsersFromGroup() {
         User user1 = createUser();
@@ -443,17 +505,14 @@ public class UserDAOimplTest {
 
         userDAO.addUserToGroup(group2.getId(), user1.getId());
 
-        Set<User> user_in_g1 = userDAO.getUsersInGroup(group1.getId());
-        Set<User> user_in_g2 = userDAO.getUsersInGroup(group2.getId());
+        Set<User> user_in_g1 = userDAO.getUsersInGroup(group1.getId(), User.class);
+        Set<User> user_in_g2 = userDAO.getUsersInGroup(group2.getId(), User.class);
         assertTrue(user_in_g1.size() == 4);
         assertTrue(user_in_g2.size() == 1);
 
         userDAO.removeAllUsersFromGroup(group1.getId());
         userDAO.removeAllUsersFromGroup(group2.getId());
-        assertTrue(userDAO.getUsersInGroup(group1.getId()).isEmpty());
-        assertTrue(userDAO.getUsersInGroup(group2.getId()).isEmpty());
-
+        assertTrue(userDAO.getUsersInGroup(group1.getId(), User.class).isEmpty());
+        assertTrue(userDAO.getUsersInGroup(group2.getId(), User.class).isEmpty());
     }
-
-
 }
