@@ -1,6 +1,7 @@
 package service.dao.userGroup;
 
 import config.JPASessionUtil;
+import objectModels.basicViews.GroupBasicView;
 import objectModels.basicViews.UserBasicView;
 import objectModels.userGroup.HierarchyGroup;
 import objectModels.userGroup.User;
@@ -225,6 +226,57 @@ public class UserDAOimpl implements UserDAO {
         }
     }
 
+    @Override
+    public <T> Set<T> getGroupsForUser(long user_id, Class<T> view, HierarchyGroup.STATUS... statuses) {
+        if(view == Long.class) {
+            return (Set<T>) getGroupsForUser();
+        } else if (view == HierarchyGroup.class) {
+            return (Set<T>) getGroupsForUser(user_id, statuses);
+        } else if (view == GroupBasicView.class) {
+            return (Set<T>) getGroupForUserBasicView(user_id, statuses);
+        } else {
+            throw new IllegalArgumentException("view should be either Long.class for ids , HierarchyGroup.class, or GroupBasicView.class");
+        }
+    }
+
+    private Set<Long> getGroupForUserIdView(long user_id, HierarchyGroup.STATUS... statuses){
+        Session session = JPASessionUtil.getCurrentSession();
+        try {
+            // really complicate query
+            session.beginTransaction();
+            Query<Long> query = session.createQuery(
+                    "select g.id from User u inner join u.groups g WHERE (u.id = :user_id) AND g.status in :statuses",
+                    Long.class);
+            query.setParameter("user_id", user_id);
+            query.setParameter("statuses", statuses.length == 0 ?
+                    Arrays.asList(HierarchyGroup.STATUS.values()) : Arrays.asList(statuses));
+            Set<Long> results = new HashSet<>(query.getResultList());
+            session.getTransaction().commit();
+            return results;
+        } catch (Exception ex) {
+            session.getTransaction().rollback();
+            throw new RuntimeException(ex);
+        }
+    }
+    private Set<GroupBasicView> getGroupForUserBasicView(long user_id, HierarchyGroup.STATUS... statuses){
+        Set<Long> ids = getGroupForUserIdView(user_id, statuses);
+        if(ids.isEmpty()) return new HashSet<>();
+
+        Session session = JPASessionUtil.getCurrentSession();
+        try {
+            // really complicate query
+            session.beginTransaction();
+            Query<GroupBasicView> query = session.createQuery(
+                    "from GroupBasicView  gbv where gbv.id in :ids",
+                    GroupBasicView.class);
+            Set<GroupBasicView> results = new HashSet<>(query.setParameter("ids", ids).getResultList());
+            session.getTransaction().commit();
+            return results;
+        } catch (Exception ex) {
+            session.getTransaction().rollback();
+            throw new RuntimeException(ex);
+        }
+    }
 
     @Override
     public void addUserToGroup(long group_id, long user_id) {

@@ -330,6 +330,24 @@ public class HierarchyGroupDAOimplTest {
 
     @Test
     void getManagerGroup() {
+        List<HierarchyGroup> groups = new ArrayList<>();
+        for(int i = 0 ; i < 10; i++) {
+            groups.add(new HierarchyGroup("group" + i));
+        }
+        groups.get(0).createSubordinateGroups(new HashSet<>(groups.subList(1,10)));
+        groups.forEach(group -> groupDAO.registerGroup(group));
+        // g1 - g9 have their manager group set as g0
 
+        groups.subList(1,10).forEach( group -> {
+            assertTrue(groupDAO.getManagerGroup(Long.class, group.getId())== groups.get(0).getId());
+            assertTrue(groupDAO.getManagerGroup(HierarchyGroup.class, group.getId()).equals(groups.get(0)));
+            assertTrue(groupDAO.getManagerGroup(GroupBasicView.class, group.getId()).equals(
+                    new GroupBasicView(groups.get(0).getId(), groups.get(0).getName(), groups.get(0).getStatus())));
+        });
+
+        // g0 have so manager group
+        assertNull(groupDAO.getManagerGroup(Long.class, groups.get(0).getId()));
+        assertNull(groupDAO.getManagerGroup(HierarchyGroup.class, groups.get(0).getId()));
+        assertNull(groupDAO.getManagerGroup(GroupBasicView.class, groups.get(0).getId()));
     }
 }

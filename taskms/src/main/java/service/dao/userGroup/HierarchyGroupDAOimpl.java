@@ -2,21 +2,15 @@ package service.dao.userGroup;
 
 import config.JPASessionUtil;
 import objectModels.basicViews.GroupBasicView;
-import objectModels.msg.TMSIssue;
 import objectModels.userGroup.HierarchyGroup;
-import objectModels.userGroup.HierarchyGroup_;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import java.util.*;
 
 import static config.JPASessionUtil.rollBack;
-import static config.JPASessionUtil.update;
 
 /**
  * Created by rohan on 2/14/17.
@@ -238,8 +232,9 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
             session.beginTransaction();
             Query<Long> query = session.createQuery(
                     "select g.managerGroup.id from HierarchyGroup  g where g.id =:groupId ", Long.class);
-            query.setParameter("groupId", groupId);
-            return query.getSingleResult();
+            Long id = query.setParameter("groupId", groupId).getSingleResult();
+            session.getTransaction().commit();
+            return id;
         } catch (Exception ex) {
             session.getTransaction().rollback();
             ex.printStackTrace();
@@ -252,8 +247,9 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
             session.beginTransaction();
             Query<HierarchyGroup> query = session.createQuery(
                     "select g.managerGroup from HierarchyGroup g where g.id =:groupId ", HierarchyGroup.class);
-            query.setParameter("groupId", groupId);
-            return query.getSingleResult();
+            HierarchyGroup manager = query.setParameter("groupId", groupId).getSingleResult();
+            session.getTransaction().commit();
+            return manager;
         } catch (Exception ex) {
             session.getTransaction().rollback();
             ex.printStackTrace();
@@ -268,8 +264,9 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
             session.beginTransaction();
             Query<GroupBasicView> query = session.createQuery(
                     "from GroupBasicView g where g.id =:groupId ", GroupBasicView.class);
-            query.setParameter("groupId", id);
-            return query.getSingleResult();
+            GroupBasicView groupBasicView = query.setParameter("groupId", id).getSingleResult();
+            session.getTransaction().commit();
+            return groupBasicView;
         } catch (Exception ex) {
             session.getTransaction().rollback();
             // the id has been found, BasicView should also be found, therefore here i'd like to fail fast

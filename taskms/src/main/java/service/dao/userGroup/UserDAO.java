@@ -47,15 +47,15 @@ public interface UserDAO {
 
     // put group here because knowledge of group mapping is in User object model
     // Group
-
+    @Deprecated
     Set<User> getUsersInGroup(String group_name, User.STATUS... userStatuses);
+    @Deprecated
     Set<User> getUsersInGroup(long group_id, User.STATUS... userStatuses);
     <T> Set<T> getUsersInGroup(long group_id, Class<T> view, User.STATUS... userStatuses);
 
 
     Set<HierarchyGroup> getGroupsForUser(long user_id, HierarchyGroup.STATUS... statuses);
-
-    // User
+    <T> Set<T> getGroupsForUser(long user_id, Class<T> view, HierarchyGroup.STATUS... statuses);
 
     // quick utility
     void setUserStatus(long id, User.STATUS status);
