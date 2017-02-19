@@ -13,14 +13,6 @@ import java.util.Set;
  */
 public interface HierarchyGroupDAO {
     /**
-     * create   : registerGroup
-     * update   : saveGroup()
-     *            changStatus()
-     * select   :
-     * delete   : x
-     */
-
-    /**
      * Register a group, persisting it the databases
      * @param group a transient group object to be persisted
      * @return id of newly persisted object
@@ -32,6 +24,7 @@ public interface HierarchyGroupDAO {
 
     boolean isRegisteredGroup(String group_name);
     boolean isRegisteredGroup(long id);
+
 
     void updateGroup(HierarchyGroup group);
 
@@ -49,7 +42,22 @@ public interface HierarchyGroupDAO {
      */
     HierarchyGroup getGroup(String groupName);
 
+    /**
+     * Get group id by name
+     * @param groupName
+     * @return
+     * @throws IllegalArgumentException if there does not exist a group with such name
+     */
+    long getGroupIdByName(String groupName);
+
+    //
     Set<HierarchyGroup> getGroups(HierarchyGroup.STATUS... statuses);
+
+    // this method is not of good value now
+    // <T> Set<T> getGroups(Class<T> view, TMSIssue.STATUS... statuses);
+
+    <T> Set<T> getSubordinateGroups(Class<T> view, long groupId, HierarchyGroup.STATUS... statuses);
+    <T> T getManagerGroup(Class<T> view, long groupId);
 
     // UPDATE UTILITIES
     void setGroupStatus(long group_id, HierarchyGroup.STATUS status);

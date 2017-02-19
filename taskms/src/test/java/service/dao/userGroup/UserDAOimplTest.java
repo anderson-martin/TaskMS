@@ -1,6 +1,7 @@
 package service.dao.userGroup;
 
 import config.JPASessionUtil;
+import objectModels.basicViews.UserBasicView;
 import objectModels.userGroup.ContactDetail;
 import objectModels.userGroup.HierarchyGroup;
 import objectModels.userGroup.User;
@@ -15,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Created by rohan on 2/16/17.
  */
 public class UserDAOimplTest {
-
+    // utility methods
     public static void cleanUserTable() {
         JPASessionUtil.doWithCurrentSession(session -> {
             List<User> users = session.createQuery("from User").getResultList();
@@ -25,20 +26,6 @@ public class UserDAOimplTest {
         });
     }
 
-    @BeforeEach
-    void cleanUp() {
-        // user table should be cleaned first because user refers to group
-        cleanUserTable();
-        HierarchyGroupDAOimplTest.cleanGroupTable();
-    }
-
-    public UserDAO userDAO = UserDAOimpl.getSingleInstance();
-    public HierarchyGroupDAO hierarchyGroupDAO = HierarchyGroupDAOimpl.getSingleInstance();
-
-
-    private static final String userName = "dangng";
-
-    // create user without identifier
     public static User createUser() {
         User user = new User(userName, "dang", "nguyen");
         ContactDetail contactDetail = new ContactDetail("lintu", "02660", "ESPOO", "nguyen.h.dang.1001@gmail.com", "0465672638");
@@ -46,7 +33,20 @@ public class UserDAOimplTest {
         return user;
     }
 
+    @BeforeEach
+    void cleanUp() {
+        // user table should be cleaned first because user refers to group
+        cleanUserTable();
+        HierarchyGroupDAOimplTest.cleanGroupTable();
+    }
+    public UserDAO userDAO = UserDAOimpl.getSingleInstance();
 
+
+    public HierarchyGroupDAO hierarchyGroupDAO = HierarchyGroupDAOimpl.getSingleInstance();
+
+    private static final String userName = "dangng";
+
+    // registerUser()
     @Test
     void registerUserWithNoGroup() {
         User user = createUser();
@@ -149,6 +149,14 @@ public class UserDAOimplTest {
         assertNull(userDAO.getUser(""));
         assertNull(userDAO.getUser("   "));
         assertNull(userDAO.getUser("?*^*%%#$)#%"));
+    }
+
+    @Test
+    void getUserIdByUserName() {
+        User user = createUser();
+        userDAO.registerUser(user);
+        assertEquals(userDAO.getUserIdByUserName(user.getUserName()), user.getId());
+        System.out.println(userDAO.getUserIdByUserName("vittu perkele"));
     }
 
     @Test
@@ -262,6 +270,7 @@ public class UserDAOimplTest {
 
         HierarchyGroup g1 = new HierarchyGroup("g1");
         HierarchyGroup g2 = new HierarchyGroup("g2");
+        // group1 have 2 user, where as group 2 have no user
         user2.getGroups().add(g2);
         user3.getGroups().add(g2);
 
@@ -300,6 +309,42 @@ public class UserDAOimplTest {
         assertTrue(userInG2_CLOSED.contains(user1));
         assertTrue(userInG2_ACTIVE.contains(user2));
         assertTrue(userInG2_HR.contains(user3));
+    }
+
+    @Test
+    void getUsersInGroupInValidGroup() {
+        System.out.println(userDAO.getUsersInGroup(10));
+    }
+
+    @Test
+    void getUsersInGroupWithView() {
+        User user1 = createUser();
+        User user2 = createUser();
+        User user3 = createUser();
+        user1.setUserName("a");
+        user2.setUserName("b");
+        user3.setUserName("c");
+
+        HierarchyGroup g1 = new HierarchyGroup("g1");
+        HierarchyGroup g2 = new HierarchyGroup("g2");
+        // group 1 no user, group 2 two user
+        user2.getGroups().add(g2);
+        user3.getGroups().add(g2);
+
+        hierarchyGroupDAO.registerGroup(g1);
+        hierarchyGroupDAO.registerGroup(g2);
+        List<User> users = Arrays.asList(user1, user2, user3);
+        users.forEach(us -> userDAO.registerUser(us));
+        // no STATUS argument
+
+        Set<Long> usersInG1 = userDAO.getUsersInGroup(g1.getId(), Long.class);
+        Set<Long> usersInG2 = userDAO.getUsersInGroup(g2.getId(), Long.class);
+        Set<UserBasicView> usersInG2BasicView = userDAO.getUsersInGroup(g2.getId(), UserBasicView.class);
+        assertTrue(usersInG1.isEmpty());
+        assertTrue(usersInG2.size() == 2);
+        assertTrue(usersInG2.contains(user2.getId()));
+        assertTrue(usersInG2.contains(user3.getId()));
+        assertTrue(usersInG2BasicView.size() == 2);
     }
 
     @Test

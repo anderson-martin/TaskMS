@@ -1,6 +1,8 @@
 package service.dao.userGroup;
 
 import config.JPASessionUtil;
+import objectModels.basicViews.GroupBasicView;
+import objectModels.msg.TMSIssue;
 import objectModels.userGroup.HierarchyGroup;
 import objectModels.userGroup.HierarchyGroup_;
 import org.hibernate.Session;
@@ -31,10 +33,13 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
 
     @Override
     public boolean isRegisteredGroup(String group_name) {
-        EntityManager em = JPASessionUtil.getEntityManager();
-        TypedQuery<Long> query  = em.createQuery(
-                "SELECT COUNT(h) FROM HierarchyGroup h WHERE h.name=:name", Long.class);
-        return query.setParameter("name", group_name).getSingleResult() == 1;
+        try {
+            return isRegisteredGroup(getGroupIdByName(group_name));
+        } catch (IllegalArgumentException ex) {
+            return false;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
     @Override
     public boolean isRegisteredGroup(long id) {
@@ -62,20 +67,26 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
 
     @Override
     public HierarchyGroup getGroup(String groupName) {
-        EntityManager em = JPASessionUtil.getEntityManager();
-        CriteriaBuilder builder = em.getCriteriaBuilder();
-        CriteriaQuery<HierarchyGroup> criteria = builder.createQuery(HierarchyGroup.class);
-        Root<HierarchyGroup> root = criteria.from(HierarchyGroup.class);
-        criteria.select(root).where(builder.equal(
-                root.get(HierarchyGroup_.name),
-                builder.parameter(String.class, "name")
-        ));
         try {
-            HierarchyGroup group = em.createQuery(criteria).setParameter("name",groupName).getSingleResult();
-            return group;
-        } catch (Exception ex) {
-            ex.printStackTrace();
+            return getGroup(getGroupIdByName(groupName));
+        } catch (IllegalArgumentException ex) {
             return null;
+        } catch (Exception ex) {
+            // this would be strange case
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public long getGroupIdByName(String groupName) {
+        TypedQuery<Long> query = JPASessionUtil.getEntityManager().createQuery("select g.id from HierarchyGroup g where g.name=:name", Long.class);
+        query.setParameter("name", groupName);
+        try {
+            return query.getSingleResult();
+        } catch (javax.persistence.NoResultException ex) {
+            throw new IllegalArgumentException("invalid userName, no result found");
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
     }
 
@@ -140,6 +151,129 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
             rollBack(session.getTransaction());
             throw new RuntimeException(ex);
 //            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    public <T> Set<T> getSubordinateGroups(Class<T> view, long groupId, HierarchyGroup.STATUS... subordinateStatuses) {
+        if(view == HierarchyGroup.class) {
+            return (Set<T>) getSubordinateGroups(groupId, subordinateStatuses);
+        } else if (view == Long.class) {
+            return (Set<T>) getSubordinateGroupsIdView(groupId, subordinateStatuses);
+        } else if (view == GroupBasicView.class) {
+            return (Set<T>) getSubordinateGroupsBasicView(groupId, subordinateStatuses);
+        } else throw new IllegalArgumentException("view param must be either User.class or Long.class or UserBasicView.class");
+    }
+    private Set<Long> getSubordinateGroupsIdView(long groupId, HierarchyGroup.STATUS... subordinateStatuses) {
+        Session session = JPASessionUtil.getCurrentSession();
+        try {
+            session.beginTransaction();
+            Query<Long> query = session.createQuery(
+                    "select sg.id from HierarchyGroup g inner join g.subordinateGroups sg WHERE (g.id = :groupId) AND sg.status in :subordinateStatuses", Long.class);
+
+            query.setParameter("groupId", groupId);
+            query.setParameter("subordinateStatuses", subordinateStatuses.length == 0 ?
+                    Arrays.asList(HierarchyGroup.STATUS.values()) : Arrays.asList(subordinateStatuses));
+
+            Set<Long> results = new HashSet<>(query.getResultList());
+            session.getTransaction().commit();
+            return results;
+        } catch (Exception ex) {
+            session.getTransaction().rollback();
+            throw new RuntimeException(ex);
+        }
+    }
+    private Set<HierarchyGroup> getSubordinateGroups(long groupId, HierarchyGroup.STATUS... subordinateStatuses) {
+        Set<Long> ids = getSubordinateGroupsIdView(groupId, subordinateStatuses);
+        // why: if we switch the position of the above and bellow line, exception will the thrown
+        if(ids.isEmpty()) return new HashSet<>();
+        Session session = JPASessionUtil.getCurrentSession();
+        try {
+            session.beginTransaction();
+            Query<HierarchyGroup> query = session.createQuery(
+                    "from HierarchyGroup g where g.id in :ids", HierarchyGroup.class);
+
+            query.setParameter("ids", ids);
+
+            Set<HierarchyGroup> results = new HashSet<>(query.getResultList());
+            session.getTransaction().commit();
+            return results;
+        } catch (Exception ex) {
+            session.getTransaction().rollback();
+            throw new RuntimeException(ex);
+        }
+    }
+    private Set<GroupBasicView> getSubordinateGroupsBasicView(long groupId, HierarchyGroup.STATUS... subordinateStatuses) {
+        Set<Long> ids = getSubordinateGroupsIdView(groupId, subordinateStatuses);
+        if(ids.isEmpty()) return new HashSet<>();
+        Session session = JPASessionUtil.getCurrentSession();
+        try {
+            session.beginTransaction();
+            Query<GroupBasicView> query = session.createQuery(
+                    "from GroupBasicView gbv where gbv.id in :ids", GroupBasicView.class);
+            query.setParameter("ids", ids);
+            Set<GroupBasicView> results = new HashSet<>(query.getResultList());
+            session.getTransaction().commit();
+            return results;
+        } catch (Exception ex) {
+            session.getTransaction().rollback();
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public <T> T getManagerGroup(Class<T> view, long groupId) {
+        if(view == HierarchyGroup.class) {
+            return (T) getManagerGroup(groupId);
+        } else if (view == Long.class) {
+            return (T) getManagerGroupId(groupId);
+        } else if (view == GroupBasicView.class) {
+            return (T) getManagerGroupBasicView(groupId);
+        } else throw new IllegalArgumentException("view param must be either User.class or Long.class or UserBasicView.class");
+    }
+    // return null if no manager group found
+    private Long getManagerGroupId(long groupId) {
+        Session session = JPASessionUtil.getCurrentSession();
+        try {
+            session.beginTransaction();
+            Query<Long> query = session.createQuery(
+                    "select g.managerGroup.id from HierarchyGroup  g where g.id =:groupId ", Long.class);
+            query.setParameter("groupId", groupId);
+            return query.getSingleResult();
+        } catch (Exception ex) {
+            session.getTransaction().rollback();
+            ex.printStackTrace();
+            return null;
+        }
+    }
+    private HierarchyGroup getManagerGroup(long groupId) {
+        Session session = JPASessionUtil.getCurrentSession();
+        try {
+            session.beginTransaction();
+            Query<HierarchyGroup> query = session.createQuery(
+                    "select g.managerGroup from HierarchyGroup g where g.id =:groupId ", HierarchyGroup.class);
+            query.setParameter("groupId", groupId);
+            return query.getSingleResult();
+        } catch (Exception ex) {
+            session.getTransaction().rollback();
+            ex.printStackTrace();
+            return null;
+        }
+    }
+    private GroupBasicView getManagerGroupBasicView(long groupId) {
+        Long id = getManagerGroupId(groupId);
+        if(id ==  null) return null;
+        Session session = JPASessionUtil.getCurrentSession();
+        try {
+            session.beginTransaction();
+            Query<GroupBasicView> query = session.createQuery(
+                    "from GroupBasicView g where g.id =:groupId ", GroupBasicView.class);
+            query.setParameter("groupId", id);
+            return query.getSingleResult();
+        } catch (Exception ex) {
+            session.getTransaction().rollback();
+            // the id has been found, BasicView should also be found, therefore here i'd like to fail fast
+            throw new RuntimeException(ex);
         }
     }
 }

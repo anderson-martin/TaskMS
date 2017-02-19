@@ -1,6 +1,7 @@
 package service.dao.userGroup;
 
 import config.JPASessionUtil;
+import objectModels.basicViews.UserBasicView;
 import objectModels.userGroup.HierarchyGroup;
 import objectModels.userGroup.User;
 import objectModels.userGroup.User_;
@@ -14,6 +15,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static config.JPASessionUtil.rollBack;
@@ -50,21 +52,26 @@ public class UserDAOimpl implements UserDAO {
 
     @Override
     public User getUser(String userName) {
-        EntityManager em = JPASessionUtil.getEntityManager();
-        CriteriaBuilder builder = em.getCriteriaBuilder();
-        CriteriaQuery<User> query = builder.createQuery(User.class);
-        Root<User> root = query.from(User.class);
-        query.select(root).where(builder.equal(
-                root.get(User_.userName),
-                builder.parameter(String.class, "userName")
-        ));
-
         try {
-            return em.createQuery(query).setParameter("userName", userName).getSingleResult();
-        } catch (Exception ex) {
-            // no single result found
-            ex.printStackTrace();
+            return getUser(getUserIdByUserName(userName));
+        } catch (IllegalArgumentException ex) {
+            // exception may have been caused by getUserIdByUserName, which mean no user is found
             return null;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public long getUserIdByUserName(String userName) {
+        TypedQuery<Long> query = JPASessionUtil.getEntityManager().createQuery("select u.id from User u where u.userName=:userName", Long.class);
+        query.setParameter("userName", userName);
+        try {
+            return query.getSingleResult();
+        } catch (javax.persistence.NoResultException ex) {
+            throw new IllegalArgumentException("invalid userName, no result found");
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
     }
 
@@ -147,6 +154,53 @@ public class UserDAOimpl implements UserDAO {
         }
     }
 
+    @Override
+    public <T> Set<T> getUsersInGroup(long group_id, Class<T> view, User.STATUS... userStatuses) {
+        if(view == User.class) {
+            return (Set<T>) getUsersInGroup(group_id, userStatuses);
+        } else if (view == Long.class) {
+            return (Set<T>) getUserIdsInGroup(group_id, userStatuses);
+        } else if (view == UserBasicView.class) {
+            return (Set<T>) getUserBasicViewsInGroup(group_id, userStatuses);
+        } else throw new IllegalArgumentException("view param must be either User.class or Long.class or UserBasicView.class");
+    }
+
+    private Set<Long> getUserIdsInGroup(long group_id, User.STATUS... userStatuses) {
+        // really complicate query
+        Session session = JPASessionUtil.getCurrentSession();
+        try {
+            session.beginTransaction();
+            Query<Long> query = session.createQuery(
+                    "select u.id from User u inner join u.groups g WHERE (g.id = :group_id) AND u.status in :statuses", Long.class);
+
+            query.setParameter("group_id", group_id);
+            query.setParameter("statuses", userStatuses.length == 0 ? Arrays.asList(User.STATUS.values()) : Arrays.asList(userStatuses));
+
+            Set<Long> results = new HashSet<>(query.getResultList());
+            session.getTransaction().commit();
+            return results;
+        } catch (Exception ex) {
+            session.getTransaction().rollback();
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private Set<UserBasicView> getUserBasicViewsInGroup(long group_id, User.STATUS... userStatuses) {
+        Set<Long> ids = getUserIdsInGroup(group_id, userStatuses);
+        Session session = JPASessionUtil.getCurrentSession();
+        try {
+            session.beginTransaction();
+            Query<UserBasicView> query = session.createQuery(
+                    "from UserBasicView ubs where ubs.id in :ids");
+            query.setParameter("ids", ids);
+            Set<UserBasicView> results = new HashSet<>(query.getResultList());
+            session.getTransaction().commit();
+            return results;
+        } catch (Exception ex) {
+            session.getTransaction().rollback();
+            throw new RuntimeException(ex);
+        }
+    }
 
 
     @Override

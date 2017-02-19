@@ -1,6 +1,7 @@
 package service.dao.userGroup;
 
 import config.JPASessionUtil;
+import objectModels.basicViews.GroupBasicView;
 import objectModels.userGroup.HierarchyGroup;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,9 +19,10 @@ public class HierarchyGroupDAOimplTest {
 
     public static void cleanGroupTable() {
         JPASessionUtil.doWithCurrentSession(session -> {
-            List<HierarchyGroup> groups =session.createQuery("from HierarchyGroup ").getResultList();
+            List<HierarchyGroup> groups =session.createQuery("from HierarchyGroup ", HierarchyGroup.class).getResultList();
+            groups.forEach(group -> System.out.println(group));
             // manager group is the owning side
-            groups.forEach(group -> group.setManagerGroup(null));
+            groups.forEach(group -> group.setManagerGroup( (HierarchyGroup) null));
             session.flush();
             session.createQuery("delete from HierarchyGroup ").executeUpdate();
         });
@@ -284,4 +286,50 @@ public class HierarchyGroupDAOimplTest {
     }
 
 
+
+    // get subordinate groups with many view,
+    // group status not tested
+    @Test
+    void getSubordinateGroups() {
+        List<HierarchyGroup> groups = new ArrayList<>();
+        for(int i = 0 ; i < 10; i++) {
+            groups.add(new HierarchyGroup("group" + i));
+        }
+
+        groups.get(0).createSubordinateGroups(new HashSet<>(groups.subList(1,10)));
+        // g1 - g9 have their manager group set as g0
+        groups.forEach(group -> groupDAO.registerGroup(group));
+
+        // now for g0, which has 9 subordinates group
+
+        // ID view
+        Set<Long> g0_subordinates_idView = groupDAO.getSubordinateGroups(Long.class, groups.get(0).getId());
+        assertTrue(g0_subordinates_idView.size() == 9);
+        groups.subList(1,10).forEach( group -> assertTrue(g0_subordinates_idView.contains(group.getId())));
+
+        // GroupBasicView view
+        Set<GroupBasicView> g0_subordinates_basicView = groupDAO.getSubordinateGroups(GroupBasicView.class, groups.get(0).getId());
+        assertTrue(g0_subordinates_basicView.size() == 9);
+        groups.subList(1,10).forEach( group -> {
+            GroupBasicView groupBasicView = new GroupBasicView(group.getId(), group.getName(), group.getStatus());
+            assertTrue(g0_subordinates_basicView.contains(groupBasicView));
+        });
+
+        // HierarchyGroup view
+        Set<HierarchyGroup> g0_subordinates = groupDAO.getSubordinateGroups(HierarchyGroup.class, groups.get(0).getId());
+        assertTrue(g0_subordinates.size() == 9);
+        groups.subList(1,10).forEach( group -> assertTrue(g0_subordinates.contains(group)));
+
+        // for g1, which has 0 subordinate group
+        groups.subList(1,10).forEach(group -> {
+            assertTrue(groupDAO.getSubordinateGroups(Long.class, group.getId()).isEmpty());
+            assertTrue(groupDAO.getSubordinateGroups(HierarchyGroup.class, group.getId()).isEmpty());
+            assertTrue(groupDAO.getSubordinateGroups(GroupBasicView.class, group.getId()).isEmpty());
+        });
+    }
+
+    @Test
+    void getManagerGroup() {
+
+    }
 }

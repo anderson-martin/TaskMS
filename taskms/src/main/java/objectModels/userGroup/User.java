@@ -7,10 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Created by rohan on 2/6/17.
- */
-@Entity
+@Entity(name = "User")
 @NamedQueries(
         @NamedQuery(
                 name = "findUserByUserName",

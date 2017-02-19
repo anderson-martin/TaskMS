@@ -35,11 +35,11 @@ public class HierarchyGroup {
 
 
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne
     @JoinColumn(name = "managerGroup_id")
     private HierarchyGroup managerGroup;
 
-    @OneToMany(mappedBy = "managerGroup", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "managerGroup", fetch = FetchType.EAGER)
     private Set<HierarchyGroup> subordinateGroups = new HashSet<>();
 
 
@@ -89,7 +89,7 @@ public class HierarchyGroup {
     }
 
     // this method for convenience when manipulating bidirectional relations
-    public void addSubordinateGroups(Set<HierarchyGroup> subordinateGroups) {
+    public void createSubordinateGroups(Set<HierarchyGroup> subordinateGroups) {
         subordinateGroups.forEach( subordinateGroup -> subordinateGroup.setManagerGroup(this));
         this.subordinateGroups = subordinateGroups;
     }
@@ -98,6 +98,7 @@ public class HierarchyGroup {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Group{ id = ").append(id).append(", name = ").append(name);
+        sb.append(", status = ").append(status);
         sb.append("\n   , managerGroup = ");
         if(managerGroup == null) sb.append("null");
         else sb.append("Group{ id = ").append(managerGroup.getId()).

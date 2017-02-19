@@ -6,13 +6,6 @@ import objectModels.userGroup.User;
 import java.util.Set;
 
 public interface UserDAO {
-    /**
-     * crud
-     * create:
-     * update
-     * delete: X
-     */
-
 
     long registerUser(User user);
 
@@ -33,6 +26,14 @@ public interface UserDAO {
     User getUser(String userName);
 
     /**
+     * Get user id by userName
+     * @param userName
+     * @return id of the user with given userName
+     * @throws IllegalArgumentException if such user with given userName is not found
+     */
+    long getUserIdByUserName(String userName);
+
+    /**
      * Get a set of register users.
      * If given no parameter, get a set of all registered user.
      * If parameter(s) is given, get a set of all user having one
@@ -46,8 +47,11 @@ public interface UserDAO {
 
     // put group here because knowledge of group mapping is in User object model
     // Group
+
     Set<User> getUsersInGroup(String group_name, User.STATUS... userStatuses);
     Set<User> getUsersInGroup(long group_id, User.STATUS... userStatuses);
+    <T> Set<T> getUsersInGroup(long group_id, Class<T> view, User.STATUS... userStatuses);
+
 
     Set<HierarchyGroup> getGroupsForUser(long user_id, HierarchyGroup.STATUS... statuses);
 
