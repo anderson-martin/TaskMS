@@ -1,13 +1,17 @@
 package restResources;
 
+import objectModels.userGroup.ContactDetail;
+import objectModels.userGroup.User;
+
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 /**
  * Created by rohan on 2/18/17.
  */
 @Path("/users")
-public class User {
+public class UserResources {
     // get the list of user for HR only
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -26,7 +30,7 @@ public class User {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void createUser() {}
+    public void registerUser() {}
 //    consume {
 //        "contactDetails": {
 //        "phoneNumber": "1234567",
@@ -50,10 +54,10 @@ public class User {
     @Path("/{userId}")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public void deactivateUser() {}
+    public UserResources deactivateUser() { return null;}
 //    {
 //        "contactDetails": {
-//        "phoneNumber": "1234567",
+//                "phoneNumber": "1234567",
 //                "streetAddress": "Somestreet 6 C 66",
 //                "city": "Pompeii",
 //                "postalCode": "02230",
@@ -64,7 +68,7 @@ public class User {
 //            "firstName": "Bob",
 //            "lastName": "Chen",
 //            "id": 69,
-//            "managerGroups": [
+//        "managerGroups": [
 //        {
 //            "id": 69,
 //                "name": "cashiers"
@@ -88,7 +92,7 @@ public class User {
     @Path("/{userId}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public void getUserInfo() {}
+    public UserResources getUserInfo(@HeaderParam("Authorization") String key, @PathParam("userId") long id) { return null;}
 //    {
 //        "contactDetails": {
 //        "phoneNumber": "1234567",
@@ -102,32 +106,30 @@ public class User {
 //            "firstName": "Bob",
 //            "lastName": "Chen",
 //            "id": 69,
-//            "managerGroups": [
-//        {
-//            "id": 69,
-//                "name": "cashiers"
-//        }
-//  ],
 //        "groups": [
 //        {
 //            "id": 69,
 //                "name": "cashiers"
 //        }
 //  ],
-//        "subordinateGroups": [
-//        {
-//            "id": 69,
-//                "name": "cashiers"
-//        }
-//  ]
 //    }
 
+    public class UpdateUser {
+        // HR -> update all
+        // user -> update his info except staus
+        private String firstName;
+        private String lastName;
+        private List<Long> groups;
+        private User.STATUS status;
+        private ContactDetail contactDetails;
+    }
+
     // update user
-    @Path("{userId}")
+    @Path("/{userId}")
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void updateUser() {}
+    public void updateUser(@HeaderParam("Authorization") String key, UpdateUser updateUser) {}
     // consume
 //    {
 //        "firstName": "Bob",

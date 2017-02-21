@@ -7,13 +7,10 @@ import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Created by rohan on 2/19/17.
- */
 @Entity
 @Table(name = "HierarchyGroup")
 @Immutable
-public class GroupBasicView {
+public class GroupExtendedView {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -25,9 +22,15 @@ public class GroupBasicView {
     @Column(nullable = false)
     private HierarchyGroup.STATUS status = HierarchyGroup.STATUS.ACTIVE;
 
+    @ManyToOne
+    @JoinColumn(name = "managerGroup_id")
+    private GroupBasicView managerGroup;
 
-    public GroupBasicView() {}
-    public GroupBasicView(long id, String name, HierarchyGroup.STATUS status) {
+    @OneToMany(mappedBy = "managerGroup", fetch = FetchType.EAGER)
+    private Set<GroupBasicView> subordinateGroups = new HashSet<>();
+
+    public GroupExtendedView() {}
+    public GroupExtendedView(long id, String name, HierarchyGroup.STATUS status) {
         setName(name);
         setStatus(status);
         setId(id);

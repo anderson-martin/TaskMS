@@ -7,7 +7,7 @@ import javax.ws.rs.core.MediaType;
  * Created by rohan on 2/18/17.
  */
 @Path("/tasks")
-public class Task {
+public class TaskResources {
     // all task associated with user
     // task.recipientGroup = his subordinate group
     // && task where he is in recipient list

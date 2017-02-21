@@ -2,7 +2,9 @@ package service.dao.userGroup;
 
 import config.JPASessionUtil;
 import objectModels.basicViews.GroupBasicView;
+import objectModels.basicViews.GroupExtendedView;
 import objectModels.userGroup.HierarchyGroup;
+import org.hibernate.query.Query;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +35,21 @@ public class HierarchyGroupDAOimplTest {
     @BeforeEach
     void cleanUp() {
         cleanGroupTable();
+    }
+
+    @Test
+    void groupExtendedView() {
+        List<HierarchyGroup> groups = new ArrayList<>();
+        for(int i = 0 ; i < 10; i++) {
+            groups.add(new HierarchyGroup("group" + i));
+        }
+        groups.get(0).createSubordinateGroups(new HashSet<>(groups.subList(1,10)));
+        groups.forEach(group -> groupDAO.registerGroup(group));
+        JPASessionUtil.doWithCurrentSession(session ->  {
+            Query<GroupExtendedView> query = session.createQuery("from GroupExtendedView g where g.id = 1", GroupExtendedView.class);
+            GroupExtendedView groupBasicView = query.getSingleResult();
+            System.out.println(groupBasicView);
+        });
     }
 
     @Test

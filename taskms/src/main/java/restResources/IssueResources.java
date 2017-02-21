@@ -8,7 +8,7 @@ import javax.ws.rs.core.MediaType;
  */
 
 @Path("/issues")
-public class Issue {
+public class IssueResources {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public void getIssues() {}

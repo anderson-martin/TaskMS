@@ -7,7 +7,7 @@ import javax.ws.rs.core.MediaType;
  * Created by rohan on 2/18/17.
  */
 @Path("/group")
-public class Group {
+public class GroupResources {
     // get group information
     @GET
     @Produces(MediaType.APPLICATION_JSON)

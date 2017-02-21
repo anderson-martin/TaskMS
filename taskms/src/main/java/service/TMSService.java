@@ -1,8 +1,11 @@
 package service;
 
+import objectModels.basicViews.UserBasicView;
 import objectModels.msg.TMSTask;
 import objectModels.userGroup.HierarchyGroup;
 import objectModels.userGroup.User;
+
+import java.util.List;
 
 /**
  * Created by rohan on 2/9/17.
@@ -12,10 +15,10 @@ public interface TMSService {
 
     // all method need username to authorize
     // We start with a HR person, and he will create playground by User, HierarchyGroup
-    class Authorize {
+    class Credential {
         private final String key;
 
-        public Authorize(String key) {
+        public Credential(String key) {
             this.key = key;
         }
 
@@ -35,7 +38,7 @@ public interface TMSService {
      *     read   any   :   (username | id) ->   User // basic
      */
 
-
+    List<User> getAllUsers(Credential key);
     /**
      * Register an user to the system
      * Authorized by HR person
@@ -45,24 +48,13 @@ public interface TMSService {
      * @Throw java.lang.IllegalArgumentException if user.getId() == 0;
      * @Throw javax.naming.AuthenticationException if this action is not credential fail
      */
-    Long registerUser(Authorize key, User user);
+    UserBasicView registerUser(Credential key, User user);
 
-    /**
-     * Deactivate user by changing (s)he status to User.STATUS.CLOSED
-     * Available of
-     * @param key
-     * @param userName name of the user
-     * @throws IllegalArgumentException if the user has not been registered
-     */
-    void deactivateUser(Authorize key, String userName);
+    User deactivateUser(Credential key, Long id);
 
-    void deactivateUser(Authorize key, Long id);
+    User updateUser(Credential key, User user);
 
-    void updateUser(Authorize key, User user);
-
-    // observers
-    User getUser(String userName);
-    User getUser(long id);
+    User getUserInfo(long id);
 
 
     /**
@@ -76,8 +68,8 @@ public interface TMSService {
      *      read       any:  (groupName| id) -> HierarchyGroup  // basic
      */
 
-    Long registerGroup(Authorize key, HierarchyGroup group);
-    void deactivateGroup(Authorize key, HierarchyGroup group);
+    Long registerGroup(Credential key, HierarchyGroup group);
+    void deactivateGroup(Credential key, HierarchyGroup group);
 
 
     /**
@@ -87,7 +79,7 @@ public interface TMSService {
      *      update      managing      :    TMSTASK -> update
      *                  recipient     :    only change status
      */
-    long createTask(Authorize key, TMSTask task);
+    long createTask(Credential key, TMSTask task);
 
 
     /**

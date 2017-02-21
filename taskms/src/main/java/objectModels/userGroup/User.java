@@ -60,7 +60,7 @@ public class User {
         StringBuilder sb = new StringBuilder();
         sb.append("User\n{   id = ").append(id);
         sb.append("\n   , username = ").append(userName);
-        sb.append(", lastName = " ).append(lastName);
+        sb.append(", lastName = ").append(lastName);
         sb.append(", firstName = ").append(firstName);
         sb.append("\n   , contactDetail = ").append(contactDetail);
         sb.append("\n   , groups = \n").append(groups.toString());
@@ -123,6 +123,7 @@ public class User {
     public void setContactDetail(ContactDetail contactDetail) {
         this.contactDetail = contactDetail;
     }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
