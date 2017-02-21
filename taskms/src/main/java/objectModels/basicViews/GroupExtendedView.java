@@ -3,30 +3,13 @@ package objectModels.basicViews;
 import objectModels.userGroup.HierarchyGroup;
 import org.hibernate.annotations.Immutable;
 
-import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
-@Entity
-@Table(name = "HierarchyGroup")
-@Immutable
-public class GroupExtendedView {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+public class GroupExtendedView extends GroupBasicView{
 
-    @Column(nullable = false, length = 25, unique = true)
-    private String name;
-
-    // status default: ACTIVE
-    @Column(nullable = false)
-    private HierarchyGroup.STATUS status = HierarchyGroup.STATUS.ACTIVE;
-
-    @ManyToOne
-    @JoinColumn(name = "managerGroup_id")
     private GroupBasicView managerGroup;
 
-    @OneToMany(mappedBy = "managerGroup", fetch = FetchType.EAGER)
     private Set<GroupBasicView> subordinateGroups = new HashSet<>();
 
     public GroupExtendedView() {}
@@ -38,7 +21,13 @@ public class GroupExtendedView {
 
     @Override
     public String toString() {
-        return "GroupBasicView { id = " + id + ", name = " + name + ", status = " + status + " }";
+        StringBuilder sb = new StringBuilder();
+        sb.append("GroupExtendedView { id = ").append(getId());
+        sb.append(", name = ").append(getName());
+        sb.append(", status = ").append(getStatus());
+        sb.append("\n   , managerGroup = ").append(getManagerGroup().toString());
+        sb.append("\n   , subordinateGroup = ").append(getSubordinateGroups().toString());
+        return sb.append("\n }").toString();
     }
 
     @Override
@@ -61,27 +50,19 @@ public class GroupExtendedView {
         return result;
     }
 
-    public long getId() {
-        return id;
+    public GroupBasicView getManagerGroup() {
+        return managerGroup;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public void setManagerGroup(GroupBasicView managerGroup) {
+        this.managerGroup = managerGroup;
     }
 
-    public String getName() {
-        return name;
+    public Set<GroupBasicView> getSubordinateGroups() {
+        return subordinateGroups;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public HierarchyGroup.STATUS getStatus() {
-        return status;
-    }
-
-    public void setStatus(HierarchyGroup.STATUS status) {
-        this.status = status;
+    public void setSubordinateGroups(Set<GroupBasicView> subordinateGroups) {
+        this.subordinateGroups = subordinateGroups;
     }
 }

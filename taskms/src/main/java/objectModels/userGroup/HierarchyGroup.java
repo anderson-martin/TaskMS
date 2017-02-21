@@ -33,8 +33,6 @@ public class HierarchyGroup {
     @Column(nullable = false)
     private STATUS status = STATUS.ACTIVE;
 
-
-
     @ManyToOne
     @JoinColumn(name = "managerGroup_id")
     private HierarchyGroup managerGroup;
