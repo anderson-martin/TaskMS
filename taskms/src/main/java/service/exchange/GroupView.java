@@ -1,6 +1,7 @@
 package service.exchange;
 
 import objectModels.basicViews.GroupBasicView;
+import objectModels.basicViews.UserBasicView;
 import objectModels.userGroup.HierarchyGroup;
 
 import java.util.HashSet;
@@ -18,7 +19,13 @@ public class GroupView {
 
     private Set<GroupBasicView> subordinateGroups = new HashSet<>();
 
+    private Set<UserBasicView> users = new HashSet<>();
+
+
+
+
     public GroupView() {}
+
     public GroupView(long id, String name, HierarchyGroup.STATUS status) {
         setName(name);
         setStatus(status);
@@ -33,6 +40,7 @@ public class GroupView {
         sb.append(", status = ").append(getStatus());
         sb.append("\n   , managerGroup = ").append(getManagerGroup().toString());
         sb.append("\n   , subordinateGroups = ").append(getSubordinateGroups().toString());
+        sb.append("\n   , users = ").append(users);
         return sb.append("\n }").toString();
     }
 
@@ -94,5 +102,13 @@ public class GroupView {
 
     public void setStatus(HierarchyGroup.STATUS status) {
         this.status = status;
+    }
+
+    public Set<UserBasicView> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<UserBasicView> users) {
+        this.users = users;
     }
 }
