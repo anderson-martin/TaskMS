@@ -1,19 +1,25 @@
-package objectModels.basicViews;
+package service.exchange;
 
+import objectModels.basicViews.GroupBasicView;
 import objectModels.userGroup.HierarchyGroup;
-import org.hibernate.annotations.Immutable;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class GroupExtendedView extends GroupBasicView{
+public class GroupView {
+
+    private long id;
+
+    private String name;
+
+    private HierarchyGroup.STATUS status;
 
     private GroupBasicView managerGroup;
 
     private Set<GroupBasicView> subordinateGroups = new HashSet<>();
 
-    public GroupExtendedView() {}
-    public GroupExtendedView(long id, String name, HierarchyGroup.STATUS status) {
+    public GroupView() {}
+    public GroupView(long id, String name, HierarchyGroup.STATUS status) {
         setName(name);
         setStatus(status);
         setId(id);
@@ -22,11 +28,11 @@ public class GroupExtendedView extends GroupBasicView{
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("GroupExtendedView { id = ").append(getId());
+        sb.append("GroupView { id = ").append(getId());
         sb.append(", name = ").append(getName());
         sb.append(", status = ").append(getStatus());
         sb.append("\n   , managerGroup = ").append(getManagerGroup().toString());
-        sb.append("\n   , subordinateGroup = ").append(getSubordinateGroups().toString());
+        sb.append("\n   , subordinateGroups = ").append(getSubordinateGroups().toString());
         return sb.append("\n }").toString();
     }
 
@@ -64,5 +70,29 @@ public class GroupExtendedView extends GroupBasicView{
 
     public void setSubordinateGroups(Set<GroupBasicView> subordinateGroups) {
         this.subordinateGroups = subordinateGroups;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public HierarchyGroup.STATUS getStatus() {
+        return status;
+    }
+
+    public void setStatus(HierarchyGroup.STATUS status) {
+        this.status = status;
     }
 }

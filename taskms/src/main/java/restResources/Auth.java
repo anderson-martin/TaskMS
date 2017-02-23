@@ -15,4 +15,5 @@ public class Auth {
     @Produces(MediaType.APPLICATION_JSON)
     public void getAuthenticationInfo() {
     }
+
 }
