@@ -1,4 +1,4 @@
-package service.exchange;
+package service.exchange.userGroup;
 
 /**
  * Created by rohan on 2/23/17.

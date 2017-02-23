@@ -1,4 +1,4 @@
-package service.exchange;
+package service.exchange.userGroup;
 
 import java.util.HashSet;
 import java.util.Set;

@@ -1,4 +1,4 @@
-package service.exchange;
+package service.exchange.userGroup;
 
 import objectModels.basicViews.GroupBasicView;
 import objectModels.basicViews.UserBasicView;
@@ -22,8 +22,6 @@ public class GroupView {
     private Set<UserBasicView> users = new HashSet<>();
 
 
-
-
     public GroupView() {}
 
     public GroupView(long id, String name, HierarchyGroup.STATUS status) {
@@ -31,6 +29,9 @@ public class GroupView {
         setStatus(status);
         setId(id);
     }
+
+    public void load(HierarchyGroup group){}
+
 
     @Override
     public String toString() {
@@ -63,6 +64,12 @@ public class GroupView {
         result = 31 * result + (getStatus() != null ? getStatus().hashCode() : 0);
         return result;
     }
+
+
+
+
+
+
 
     public GroupBasicView getManagerGroup() {
         return managerGroup;

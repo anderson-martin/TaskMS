@@ -2,7 +2,7 @@ package service;
 
 import objectModels.basicViews.GroupBasicView;
 import objectModels.basicViews.UserBasicView;
-import service.exchange.*;
+import service.exchange.userGroup.*;
 
 import java.util.List;
 
@@ -26,10 +26,11 @@ public interface TMSService {
         }
     }
 
-
+    // USER
     /**
      * Get all users in basic view in the system
      * Authorized: HR
+     *
      * @param key authorize credential
      * @return list of users in basic view
      * @throws javax.ws.rs.ForbiddenException if authorize credential fail (403)
@@ -39,7 +40,8 @@ public interface TMSService {
     /**
      * Register an user with the system
      * Authorized: HR
-     * @param key  authorize credential
+     *
+     * @param key         authorize credential
      * @param userUpdater
      * @return basicView of the newly created user
      * @throws javax.ws.rs.BadRequestException if the user's userName, or firstName, or lastName is null; (400)
@@ -53,7 +55,8 @@ public interface TMSService {
      * + change state of use to inactive
      * + remove this user from all groups (s)he belongs to
      * Authorized: HR
-     * @param key authorize credential
+     *
+     * @param key    authorize credential
      * @param userId user id to be deactivated
      * @return deactivated user in full view as a result of the deactivation
      * @throws javax.ws.rs.BadRequestException if user's id is invalid (400)
@@ -63,6 +66,8 @@ public interface TMSService {
 
     /**
      * Update an user identified by given id
+     * Authorized: HR
+     *
      * @param key
      * @param userUpdater updating object for user
      * @return UserView as the result of the updated user
@@ -76,19 +81,20 @@ public interface TMSService {
      * Authorized:
      * + HR
      * + An user can see the detail of all users in his group, his manager group if exists, his subordinate groups if exist
+     *
      * @param key
-     * @param id id of an user registered in the system
+     * @param id  id of an user registered in the system
      * @return UserView
      * @throws javax.ws.rs.BadRequestException if user's id is invalid (400)
      * @throws javax.ws.rs.ForbiddenException  if authorize credential fail (403)
      */
     UserView getUserInfo(Credential key, long id);
 
-
-
+    // GROUP
     /**
      * Get all groups in basic view in the system
      * Authorized: HR
+     *
      * @param key authorize credential
      * @return list of all groups in basic view
      * @throws javax.ws.rs.ForbiddenException if authorize credential fail (403)
@@ -98,7 +104,8 @@ public interface TMSService {
     /**
      * Register an group with the system
      * Authorized: HR
-     * @param key  authorize credential
+     *
+     * @param key           authorize credential
      * @param groupRegister
      * @return basic view of the newly created group
      * @throws javax.ws.rs.BadRequestException if group's name is null; (400)
@@ -114,7 +121,8 @@ public interface TMSService {
      * + remove this group's manager group
      * + remove this group as a manager of its subordinate groups
      * Authorized: HR
-     * @param key authorize credential
+     *
+     * @param key     authorize credential
      * @param groupId id of the group to be deactivated
      * @return deactivated group in full view as a result of the deactivation
      * @throws javax.ws.rs.BadRequestException if group's id is invalid (400)
@@ -123,27 +131,35 @@ public interface TMSService {
     GroupView deactivateGroup(Credential key, Long groupId);
 
     /**
-     * Update an user identified by given id
+     * Update a group identified by given id
+     * Authorized: HR
+     *
      * @param key
-     * @param userUpdater updating object for user
-     * @return UserView as the result of the updated user
-     * @throws javax.ws.rs.BadRequestException if user's id is invalid or there exits invalid group id in groups(400)
+     * @param groupUpdater updating object for group
+     * @return GroupView as the result of the updated user
+     * @throws javax.ws.rs.BadRequestException if group's id is invalid or
+     *                                         there exists invalid group id in subordinate group id set or
+     *                                         there exists invalid user id in user id set (400)
      * @throws javax.ws.rs.ForbiddenException  if authorize credential fail (403)
      */
-    GroupView updateGroup(Credential key, long userId, UserUpdater userUpdater, GroupUpdater groupUpdater);
+    GroupView updateGroup(Credential key, long userId, GroupUpdater groupUpdater);
 
     /**
      * Get information about an user:
      * Authorized:
      * + HR
-     * + An user can see the detail of all users in his group, his manager group if exists, his subordinate groups if exist
+     * + An user can see the detail his group, his manager group if exists, and his subordinate groups if exist
+     *
      * @param key
      * @param groupId id of an group to be updated in the system
-     * @param groupUpdater updater object
-     * @return UserView
+     * @return GroupView
      * @throws javax.ws.rs.BadRequestException if user's id is invalid (400)
      * @throws javax.ws.rs.ForbiddenException  if authorize credential fail (403)
      */
     GroupView getGroupInfo(Credential key, long groupId);
 
+    // ISSUE
+
+
+    // TASK
 }

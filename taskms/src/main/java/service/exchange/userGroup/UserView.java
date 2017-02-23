@@ -1,4 +1,4 @@
-package service.exchange;
+package service.exchange.userGroup;
 
 import objectModels.userGroup.ContactDetail;
 import objectModels.userGroup.User;
@@ -25,6 +25,9 @@ public class UserView {
         setFirstname(firstName);
         setLastName(lastName);
     }
+
+    public void load(User user) {}
+
 
     public long getId() {
         return id;

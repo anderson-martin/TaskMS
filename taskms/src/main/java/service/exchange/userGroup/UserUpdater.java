@@ -1,4 +1,4 @@
-package service.exchange;
+package service.exchange.userGroup;
 
 import objectModels.userGroup.ContactDetail;
 import objectModels.userGroup.User;
