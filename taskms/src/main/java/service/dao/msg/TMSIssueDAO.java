@@ -14,6 +14,7 @@ public interface TMSIssueDAO {
 
     void updateIssue(TMSIssue issue);
 
+    boolean isCreatedIssue(long issueId);
     /**
      * Get issue by its id
      * @param issue_id

@@ -14,6 +14,7 @@ public interface TMSTaskDAO {
 
     TMSTask getTask(long task_id);
 
+    boolean isCreatedTask(long taskId);
     /**
      * Delete a task specified by id
      * @param taskId id of the task to be deleted

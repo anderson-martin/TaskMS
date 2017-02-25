@@ -349,7 +349,7 @@ public class TMSServiceImpl implements TMSService {
      * @return true if the taskCreator is valid to be created for the sender with given id,
      * return false otherwise.
      */
-    private boolean validateTask(long senderId, TaskCreator tc) {
+    private boolean validateTaskCreator(long senderId, TaskCreator tc) {
         if(tc.getDescription() == null || tc.getDescription().trim().isEmpty()) return false;
         if(tc.getTitle() == null || tc.getTitle().trim().isEmpty()) return false;
         if(tc.getRecipients() == null || tc.getRecipients().isEmpty()) return false;
@@ -371,7 +371,7 @@ public class TMSServiceImpl implements TMSService {
         // after validation this operation is safe
         long senderId = Long.parseLong(key.getKey());
 
-        if(!validateTask(senderId, taskCreator)) throw new BadRequestException("invalid taskCreator");
+        if(!validateTaskCreator(senderId, taskCreator)) throw new BadRequestException("invalid taskCreator");
 
         TMSTask task = new TMSTask();
         task.setTitle(taskCreator.getTitle().trim());
@@ -404,17 +404,82 @@ public class TMSServiceImpl implements TMSService {
 
     @Override
     public TaskView deleteTask(Credential key, long taskId) {
-        return null;
+        validateNonClosedUser(key);
+        // after validation this operation is safe
+        long senderId = Long.parseLong(key.getKey());
+
+        TMSTask task = taskDAO.getTask(taskId);
+        if(task == null) throw new BadRequestException("Invalid taskId");
+        if(!userDAO.doesGroupContains(task.getSenderGroup().getId(), senderId))
+            throw new ForbiddenException("Do not have the right to delete task");
+
+        taskDAO.deleteTask(taskId);
+        return TaskView.generate(task);
     }
 
+    private boolean checkIfTaskAssociatedWithUser(TMSTask task, long userId) {
+        // check if the task have user as recipient
+        boolean isTaskTargetUser = task.getRecipients().stream().map(t -> t.getId()).anyMatch(id -> (long) id == userId);
+        // check if the task was sent from a group that this user belong to
+        boolean isTaskSentByUserGroup = userDAO.getGroupsForUser(userId, Long.class).contains(task.getSenderGroup());
+        return isTaskSentByUserGroup || isTaskTargetUser;
+    }
     @Override
     public TaskView getTask(Credential key, long taskId) {
-        return null;
+        validateNonClosedUser(key);
+        // after validation this operation is safe
+        long userId = Long.parseLong(key.getKey());
+
+        TMSTask task = taskDAO.getTask(taskId);
+        if(task == null) throw new BadRequestException("Invalid taskId");
+
+        if( !checkIfTaskAssociatedWithUser(task, userId)) throw new ForbiddenException("task is not associated with user identified by given credential");
+
+        // now return the tasks, as all checking is passed
+        return TaskView.generate(task);
+    }
+
+    private boolean validateTaskUpdater(TMSTask task, TaskUpdater taskUpdater) {
+        if(taskUpdater.getDeadline() == null || taskUpdater.getDeadline().before(new Date())) return false;
+        if(taskUpdater.getStatus() == null) return false;
+        if(taskUpdater.getDescription() == null || taskUpdater.getDescription().trim().isEmpty()) return false;
+        if(taskUpdater.getRecipients() == null || taskUpdater.getRecipients().isEmpty()) return false;
+        if( ! userDAO.doesGroupContains(task.getRecipientGroup().getId(), taskUpdater.getRecipients().stream().mapToLong(Long::longValue).toArray()))
+            return false;
+
+        return true;
     }
 
     @Override
     public TaskView updateTask(Credential key, long taskId, TaskUpdater updater) {
-        return null;
+        validateNonClosedUser(key);
+        // after validation this operation is safe
+        long userId = Long.parseLong(key.getKey());
+        TMSTask task = taskDAO.getTask(taskId);
+        if(task == null) throw new BadRequestException("Invalid taskId");
+        if(!validateTaskUpdater(task, updater)) throw new BadRequestException("Invalid updater");
+
+        // check if a person can update the task
+        boolean isSender = task.getSender().getId() == userId;
+        boolean isRecipient = task.getRecipients().stream().map(t -> t.getId()).allMatch(id -> id == userId);
+        if(!isSender && !isRecipient) throw new ForbiddenException("Only task sender and task recipients may update the task");
+        // now do the update
+
+        task.setStatus(updater.getStatus());
+        task.setContent(updater.getDescription().trim());
+        if(isSender) {
+            task.setDueDate(updater.getDeadline());
+            task.setRecipients(new HashSet<>());
+            updater.getRecipients().forEach( id -> {
+                User user = new User();
+                user.setId(id);
+                task.getRecipients().add(user);
+            });
+        }
+
+        taskDAO.updateTask(task);
+
+        return TaskView.generate(taskDAO.getTask(taskId));
     }
 
     @Override

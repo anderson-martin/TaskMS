@@ -217,7 +217,7 @@ public interface TMSService {
      * @param key    Authorization Credential, which uniquely identify an user
      * @param taskId Id of the task to be retrieved
      * @return information related to the task identified by given id
-     * @throws javax.ws.rs.BadRequestException    if invalid taskId is given, or invalid taskId (400)
+     * @throws javax.ws.rs.BadRequestException    if invalid taskId is given (400)
      * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail (401)
      * @throws javax.ws.rs.ForbiddenException     if given taskId is valid however not associated with user identified
      */
@@ -229,8 +229,8 @@ public interface TMSService {
      * + recipients as identified by id belong to the recipientGroup
      * + deadline must be after the moment the task is updated
      * Authorize: an user who can update a task must be either:
-     * + task sender
-     * + one of the task recipients
+     * + task sender: can update recipient list and deadline
+     * + one of the task recipients: cannot update recipient list and deadline
      *
      * @param key     Authorization Credential, which uniquely identify an user
      * @param taskId  id of the task to be updated

@@ -1,8 +1,6 @@
 package service.dao.msg;
 
-import com.sun.javafx.tk.Toolkit;
 import config.JPASessionUtil;
-import objectModels.msg.TMSIssue;
 import objectModels.msg.TMSTask;
 import objectModels.userGroup.HierarchyGroup;
 import objectModels.userGroup.User;
@@ -11,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import service.dao.userGroup.*;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -123,6 +120,23 @@ class TMSTaskDAOImplTest {
             assertTrue(taskDAO.deleteTask(id).getId() == id);
             assertNull(taskDAO.getTask(id));
         });
+    }
+
+    @Test
+    void isCreatedTask() {
+        List<Long> taskIds = new ArrayList<>();
+        for(int i = 0; i < 10; i ++) {
+            taskIds.add(createTask());
+        }
+        taskIds.forEach( id -> assertTrue(taskDAO.isCreatedTask(id)));
+    }
+    @Test
+    void isCreatedIssue_false() {
+        for(int i = -19; i <= 19; i ++) {
+            assertFalse(taskDAO.isCreatedTask(i));
+        }
+        assertFalse(taskDAO.isCreatedTask(Long.MAX_VALUE));
+        assertFalse(taskDAO.isCreatedTask(Long.MIN_VALUE));
     }
 
     @Test

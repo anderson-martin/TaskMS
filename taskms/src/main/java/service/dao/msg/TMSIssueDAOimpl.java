@@ -8,6 +8,7 @@ import org.hibernate.Session;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -44,6 +45,14 @@ public class TMSIssueDAOimpl implements TMSIssueDAO {
             session.getTransaction().rollback();
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    public boolean isCreatedIssue(long issueId) {
+        EntityManager em = JPASessionUtil.getEntityManager();
+        TypedQuery<Long> query  = em.createQuery(
+                "SELECT COUNT(i) FROM TMSIssue i WHERE i.id = :id", Long.class);
+        return query.setParameter("id", issueId).getSingleResult() == 1;
     }
 
     @Override

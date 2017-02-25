@@ -117,14 +117,32 @@ class TMSIssueDAOimplTest {
 
     @Test
     void deleteIssue() {
-        List<Long> taskIds = new ArrayList<>();
+        List<Long> issueIds = new ArrayList<>();
         for(int i = 0; i < 10; i ++) {
-            taskIds.add(createIssue());
+            issueIds.add(createIssue());
         }
-        taskIds.forEach( id -> {
+        issueIds.forEach( id -> {
             assertTrue(issueDAO.deleteIssue(id).getId() == id);
             assertNull(issueDAO.getIssue(id));
         });
+    }
+
+    @Test
+    void isCreatedIssue_true() {
+        List<Long> issueIds = new ArrayList<>();
+        for(int i = 0; i < 10; i ++) {
+            issueIds.add(createIssue());
+        }
+        issueIds.forEach( id -> assertTrue(issueDAO.isCreatedIssue(id)));
+    }
+
+    @Test
+    void isCreatedIssue_false() {
+        for(int i = -19; i <= 19; i ++) {
+            assertFalse(issueDAO.isCreatedIssue(i));
+        }
+        assertFalse(issueDAO.isCreatedIssue(Long.MAX_VALUE));
+        assertFalse(issueDAO.isCreatedIssue(Long.MIN_VALUE));
     }
 
     @Test

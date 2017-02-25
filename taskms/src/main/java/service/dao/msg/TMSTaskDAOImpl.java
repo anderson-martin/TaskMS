@@ -6,6 +6,7 @@ import objectModels.msg.TMSTask;
 import org.hibernate.Session;
 
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -38,6 +39,14 @@ public class TMSTaskDAOImpl implements TMSTaskDAO {
             session.getTransaction().rollback();
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    public boolean isCreatedTask(long taskId) {
+        EntityManager em = JPASessionUtil.getEntityManager();
+        TypedQuery<Long> query  = em.createQuery(
+                "SELECT COUNT(i) FROM TMSTask i WHERE i.id = :id", Long.class);
+        return query.setParameter("id", taskId).getSingleResult() == 1;
     }
 
     @Override
