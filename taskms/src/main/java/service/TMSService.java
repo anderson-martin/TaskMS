@@ -186,7 +186,7 @@ public interface TMSService {
      * A Valid task creator must have:
      * + senderGroup: group that sender belong to
      * + recipientGroup: subordinate group of the sender group
-     * + recipients: every user must be a member of recipientGroup
+     * + recipients: must not be empty, and every user must be a member of recipientGroup
      * + deadline: must be the after the moment the task is created
      *
      * @param key         Authorization Credential, which uniquely identify an user

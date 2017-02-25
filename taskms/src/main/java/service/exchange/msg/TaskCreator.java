@@ -9,7 +9,6 @@ import java.util.Set;
 public class TaskCreator {
     private String description;
     private String title;
-    private long sender;
     private long senderGroup;
     private Set<Long> recipients;
     private long recipientGroup;
@@ -31,14 +30,6 @@ public class TaskCreator {
 
     public void setTitle(String title) {
         this.title = title;
-    }
-
-    public long getSender() {
-        return sender;
-    }
-
-    public void setSender(long sender) {
-        this.sender = sender;
     }
 
     public long getSenderGroup() {

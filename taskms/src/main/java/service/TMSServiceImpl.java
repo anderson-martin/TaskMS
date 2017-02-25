@@ -2,6 +2,7 @@ package service;
 
 import objectModels.basicViews.GroupBasicView;
 import objectModels.basicViews.UserBasicView;
+import objectModels.msg.TMSTask;
 import objectModels.userGroup.ContactDetail;
 import objectModels.userGroup.HierarchyGroup;
 import objectModels.userGroup.User;
@@ -14,15 +15,14 @@ import service.dao.userGroup.HierarchyGroupDAOimpl;
 import service.dao.userGroup.UserDAO;
 import service.dao.userGroup.UserDAOimpl;
 import service.exception.StateConflict;
+import service.exchange.msg.*;
 import service.exchange.userGroup.*;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.NotAuthorizedException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by rohan on 2/24/17.
@@ -73,29 +73,33 @@ public class TMSServiceImpl implements TMSService {
         userDAO.addUserToGroup(managerG.getId(), manager.getId() );
     }
 
-    /**
-     * Check if the key refer to an User with HR role
-     *
-     * @param key
-     * @return true if the key refer to HR user,
-     * false if the key refer to non existing user or existing non-HR user
-     */
-    private boolean isHRmanager(Credential key) {
+    private void validateHRManager(Credential key) {
+        User.STATUS status;
+        try {
+            status = userDAO.getUserStatus(Long.parseLong(key.getKey()));
+        } catch (Exception ex) {
+            throw new NotAuthorizedException("invalid key");
+        }
+        if (status == null || status != User.STATUS.HR_MANAGER) {
+            throw new NotAuthorizedException("not hr user");
+        }
+    }
+
+    private void validateNonClosedUser(Credential key){
         User.STATUS status = null;
         try {
             status = userDAO.getUserStatus(Long.parseLong(key.getKey()));
         } catch (Exception ex) {
-            throw new NotAuthorizedException("not hr user");
+            throw new NotAuthorizedException("invalid key");
         }
-        if (status == null || status != User.STATUS.HR_MANAGER) {
-            return false;
+        if (status == null || status == User.STATUS.CLOSED) {
+            throw new NotAuthorizedException("user is not registered || a closed user can do nothing");
         }
-        return true;
     }
 
     @Override
     public List<UserBasicView> getAllUsers(Credential key) {
-        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
+        validateHRManager(key);
         return new ArrayList<>(userDAO.getUsers(UserBasicView.class));
     }
 
@@ -111,7 +115,7 @@ public class TMSServiceImpl implements TMSService {
 
     @Override
     public UserBasicView registerUser(Credential key, UserRegister userRegister) {
-        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
+        validateHRManager(key);
 
         User user = fromRegister(userRegister);
 
@@ -128,7 +132,7 @@ public class TMSServiceImpl implements TMSService {
 
     @Override
     public DeactivationEffect deactivateUser(Credential key, Long userId) {
-        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
+        validateHRManager(key);
         if (!userDAO.isRegisteredUser(userId)) throw new BadRequestException("Invalid User Id");
 
         User user = userDAO.getUser(userId);
@@ -177,7 +181,7 @@ public class TMSServiceImpl implements TMSService {
     @Override
     public UserView updateUser(Credential key, long userId, UserUpdater userUpdater) {
         // checking userUpdaterValidity
-        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
+        validateHRManager(key);
         if (!userDAO.isRegisteredUser(userId)) throw new BadRequestException("Invalid User Id");
         if(userUpdater.getFirstName() == null || userUpdater.getLastName() == null || userUpdater.getStatus() == null)
             throw new BadRequestException("Cannot update invalid information!");
@@ -209,20 +213,20 @@ public class TMSServiceImpl implements TMSService {
 
     @Override
     public UserView getUserInfo(Credential key, long userId) {
-        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
+        validateHRManager(key);
         if (!userDAO.isRegisteredUser(userId)) throw new BadRequestException("Invalid User Id");
         return generateUserView(userId);
     }
 
     @Override
     public List<GroupBasicView> getAllGroups(Credential key) {
-        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
+        validateHRManager(key);
         return new ArrayList<>(gruopDAO.getGroups(GroupBasicView.class));
     }
 
     @Override
     public GroupBasicView registerGroup(Credential key, GroupRegister groupRegister) {
-        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
+        validateHRManager(key);
         HierarchyGroup toBeRegistered = fromRegister(groupRegister);
         try {
             gruopDAO.registerGroup(toBeRegistered);
@@ -238,7 +242,7 @@ public class TMSServiceImpl implements TMSService {
     // problem: this is not atomic amount of work :((
     @Override
     public DeactivationEffect deactivateGroup(Credential key, Long groupId) {
-        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
+        validateHRManager(key);
         if (!gruopDAO.isRegisteredGroup(groupId)) throw new BadRequestException("invalid group id");
 
         DeactivationEffect deef = new DeactivationEffect();
@@ -268,7 +272,7 @@ public class TMSServiceImpl implements TMSService {
 
     @Override
     public GroupView updateGroup(Credential key, long groupId, GroupUpdater gu) {
-        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
+        validateHRManager(key);
         if (!gruopDAO.isRegisteredGroup(groupId)) throw new BadRequestException("invalid group id");
         // checking groupUpdater validity
         if(gu.getSubordinateGroups() != null && !gu.getSubordinateGroups().isEmpty()) {
@@ -317,8 +321,124 @@ public class TMSServiceImpl implements TMSService {
 
     @Override
     public GroupView getGroupInfo(Credential key, long groupId) {
-        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
+        validateHRManager(key);
         if (!gruopDAO.isRegisteredGroup(groupId)) throw new BadRequestException("invalid group id");
         return generateGroupView(groupId);
+    }
+
+    @Override
+    public List<TaskView> getTasks(Credential key) {
+        validateNonClosedUser(key);
+        // after validation this operation is safe
+        long userId = Long.parseLong(key.getKey());
+
+        List<TaskView> tasks = new ArrayList<>();
+        userDAO.getGroupsForUser(userId, Long.class).forEach( groupId -> {
+            List<TaskView> tasksSentByGroup = taskDAO.getGroupSentTasks(groupId).stream()
+                    .map(TaskView::generate).collect(Collectors.toList());
+            tasks.addAll(tasksSentByGroup);
+        });
+        tasks.addAll(taskDAO.getUserReceivedTasks(userId).stream().map(TaskView::generate).collect(Collectors.toList()));
+        return tasks;
+    }
+
+    /**
+     * Validate a taskCreator
+     * @param senderId id of the sender for the task
+     * @param tc taskCreator containing information of the task to be validated
+     * @return true if the taskCreator is valid to be created for the sender with given id,
+     * return false otherwise.
+     */
+    private boolean validateTask(long senderId, TaskCreator tc) {
+        if(tc.getDescription() == null || tc.getDescription().trim().isEmpty()) return false;
+        if(tc.getTitle() == null || tc.getTitle().trim().isEmpty()) return false;
+        if(tc.getRecipients() == null || tc.getRecipients().isEmpty()) return false;
+        if(tc.getDeadline() == null) return false;
+        if(tc.getRecipientGroup() == 0) return false;
+        if(tc.getSenderGroup() == 0) return false;
+        // if sender group does not contain sender
+        if(! userDAO.doesGroupContains(tc.getSenderGroup(), senderId)) return false;
+        // if recipients set is empty, and contain user not from recipientGroup
+        if( ! userDAO.doesGroupContains(tc.getRecipientGroup(), tc.getRecipients().stream().mapToLong(Long::longValue).toArray()))
+            return false;
+        // if invalid deadline
+        if(tc.getDeadline().before(new Date())) return false;
+        return true;
+    }
+    @Override
+    public TaskView createTask(Credential key, TaskCreator taskCreator) {
+        validateNonClosedUser(key);
+        // after validation this operation is safe
+        long senderId = Long.parseLong(key.getKey());
+
+        if(!validateTask(senderId, taskCreator)) throw new BadRequestException("invalid taskCreator");
+
+        TMSTask task = new TMSTask();
+        task.setTitle(taskCreator.getTitle().trim());
+        task.setContent(taskCreator.getDescription().trim());
+        task.setSentDate(new Date());
+        task.setDueDate(taskCreator.getDeadline());
+        // sender group
+        HierarchyGroup senderGroup = new HierarchyGroup();
+        senderGroup.setId(taskCreator.getSenderGroup());
+        task.setSenderGroup(senderGroup);
+        // recipient group
+        HierarchyGroup recipientGroup = new HierarchyGroup();
+        recipientGroup.setId(taskCreator.getRecipientGroup());
+        task.setRecipientGroup(recipientGroup);
+        // sender
+        User sender = new User();
+        sender.setId(senderId);
+        task.setSender(sender);
+        // recipient
+        taskCreator.getRecipients().forEach( id -> {
+            User recipient = new User();
+            recipient.setId(id);
+            task.getRecipients().add(recipient);
+        });
+
+        taskDAO.createTask(task);
+
+        return TaskView.generate(taskDAO.getTask(task.getId()));
+    }
+
+    @Override
+    public TaskView deleteTask(Credential key, long taskId) {
+        return null;
+    }
+
+    @Override
+    public TaskView getTask(Credential key, long taskId) {
+        return null;
+    }
+
+    @Override
+    public TaskView updateTask(Credential key, long taskId, TaskUpdater updater) {
+        return null;
+    }
+
+    @Override
+    public List<IssueView> getIssues(Credential key) {
+        return null;
+    }
+
+    @Override
+    public IssueView createIssue(Credential key, IssueCreator issueCreator) {
+        return null;
+    }
+
+    @Override
+    public IssueView deleteIssue(Credential key, long issueId) {
+        return null;
+    }
+
+    @Override
+    public IssueView getIssue(Credential key, long issueId) {
+        return null;
+    }
+
+    @Override
+    public IssueView updateIssue(Credential key, long issueId, IssueUpdater updater) {
+        return null;
     }
 }

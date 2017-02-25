@@ -14,6 +14,12 @@ public interface TMSTaskDAO {
 
     TMSTask getTask(long task_id);
 
+    /**
+     * Delete a task specified by id
+     * @param taskId id of the task to be deleted
+     * @return deleted task, or null if given invalid taskId
+     */
+    TMSTask deleteTask(long taskId);
     // with regards to group
 
     /**

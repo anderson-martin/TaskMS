@@ -3,6 +3,8 @@ package service.dao.userGroup;
 import objectModels.userGroup.HierarchyGroup;
 import objectModels.userGroup.User;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public interface UserDAO {
@@ -59,4 +61,13 @@ public interface UserDAO {
     void addUserToGroup(long group_id, long user_id);
     void removeUserFromGroup(long group_id, long user_id);
     void removeAllUsersFromGroup(long group_id);
+
+
+    /**
+     * Return true if the group contains all users
+     * @param groupId id to identify the group
+     * @param userIds ids to identify users
+     * @return true if the group contains all users
+     */
+    boolean doesGroupContains(long groupId, long... userIds);
 }

@@ -41,6 +41,7 @@ class TMSIssueDAOimplTest {
         HierarchyGroupDAOimplTest.cleanGroupTable();
     }
 
+
     public static User createUser(String userName) {
         User user = new User(userName, "dang", "nguyen");
         ContactDetail contactDetail = new ContactDetail("lintu", "02660", "ESPOO", "nguyen.h.dang.1001@gmail.com", "0465672638");
@@ -112,6 +113,18 @@ class TMSIssueDAOimplTest {
 
         user.setId(Long.MAX_VALUE);
         assertThrows( RuntimeException.class, () -> issueDAO.createIssue(issue));
+    }
+
+    @Test
+    void deleteIssue() {
+        List<Long> taskIds = new ArrayList<>();
+        for(int i = 0; i < 10; i ++) {
+            taskIds.add(createIssue());
+        }
+        taskIds.forEach( id -> {
+            assertTrue(issueDAO.deleteIssue(id).getId() == id);
+            assertNull(issueDAO.getIssue(id));
+        });
     }
 
     @Test

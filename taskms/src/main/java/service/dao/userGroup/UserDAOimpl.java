@@ -15,9 +15,7 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by rohan on 2/16/17.
@@ -322,5 +320,43 @@ public class UserDAOimpl implements UserDAO {
         JPASessionUtil.doWithEntityManager(entityManager -> {
             entityManager.createNativeQuery("DELETE from User_HierarchyGroup WHERE group_id =" + group_id + ";").executeUpdate();
         });
+    }
+
+    /**
+     * Convert a long[] into List<Long>
+     * @param nums long[]
+     * @return List<Long>
+     */
+    private static Set<Long> converts(long... nums) {
+        Set<Long> longs = new HashSet<>();
+        for(long num : nums) {
+            longs.add(num);
+        }
+        return longs;
+    }
+
+    @Override
+    public boolean doesGroupContains(long groupId, long... userIds) {
+        if(userIds.length == 0) throw new IllegalArgumentException("userIds must be given");
+        Session session = JPASessionUtil.getCurrentSession();
+        try {
+            session.beginTransaction();
+
+            Set<Long> user_ids = converts(userIds);
+
+            Query<Long> query = session.createQuery(
+                    "select count(u.id) from User u inner join u.groups g WHERE (g.id = :groupId) AND u.id in :ids", Long.class);
+
+            query.setParameter("groupId", groupId);
+            query.setParameter("ids", user_ids);
+
+            long numFoundUser = query.getSingleResult();
+            session.getTransaction().commit();
+
+            return numFoundUser == user_ids.size();
+        } catch (Exception ex) {
+            session.getTransaction().rollback();
+            throw new RuntimeException(ex);
+        }
     }
 }

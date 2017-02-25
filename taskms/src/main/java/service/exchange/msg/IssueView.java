@@ -19,6 +19,19 @@ public class IssueView {
 
     public IssueView(){}
 
+    public static IssueView generate(TMSIssue issue) {
+        IssueView issueView = new IssueView();
+        issueView.setId(issue.getId());
+        issueView.setTitle(issue.getTitle());
+        issueView.setDescription(issue.getContent());
+        issueView.setStatus(issue.getStatus());
+
+        issueView.setSender(UserBasicView.generate(issue.getSender()));
+        issueView.setSenderGroup(GroupBasicView.generate(issue.getSenderGroup()));
+        issueView.setRecipientGroup(GroupBasicView.generate(issue.getRecipientGroup()));
+        return issueView;
+    }
+
     public long getId() {
         return id;
     }

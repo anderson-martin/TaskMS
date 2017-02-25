@@ -32,12 +32,14 @@ public class TaskView {
         taskView.setStatus(task.getStatus());
         taskView.setContent(task.getContent());
         taskView.setTitle(task.getTitle());
+        taskView.setDeadline(task.getDueDate());
+
         taskView.setSender(UserBasicView.generate(task.getSender()));
         taskView.setSenderGroup(GroupBasicView.generate(task.getSenderGroup()));
         taskView.setRecipientGroup(GroupBasicView.generate(task.getRecipientGroup()));
-        if(task.getRecipients() != null && !task.getRecipients().isEmpty())
+        if(task.getRecipients() != null && !task.getRecipients().isEmpty()) {
             task.getRecipients().forEach(rp -> taskView.getRecipients().add(UserBasicView.generate(rp)));
-        taskView.setDeadline(task.getDueDate());
+        }
         return taskView;
     }
 

@@ -5,6 +5,7 @@ import objectModels.msg.TMSIssue;
 import objectModels.msg.TMSTask;
 import org.hibernate.Session;
 
+import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,8 +16,29 @@ import java.util.Set;
 public class TMSTaskDAOImpl implements TMSTaskDAO {
 
     private static TMSTaskDAO singleInstance = new TMSTaskDAOImpl();
-    public static TMSTaskDAO getSingleInstance() {return singleInstance;}
-    private TMSTaskDAOImpl() {}
+
+    public static TMSTaskDAO getSingleInstance() {
+        return singleInstance;
+    }
+
+    private TMSTaskDAOImpl() {
+    }
+
+    @Override
+    public TMSTask deleteTask(long taskId) {
+        Session session = JPASessionUtil.getCurrentSession();
+        try {
+            session.beginTransaction();
+            TMSTask deleted = session.find(TMSTask.class, taskId);
+            if (deleted == null) return null;
+            session.delete(deleted);
+            session.getTransaction().commit();
+            return deleted;
+        } catch (Exception ex) {
+            session.getTransaction().rollback();
+            throw new RuntimeException(ex);
+        }
+    }
 
     @Override
     public long createTask(TMSTask task) {

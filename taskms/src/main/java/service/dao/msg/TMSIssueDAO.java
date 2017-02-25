@@ -10,7 +10,7 @@ import java.util.Set;
 public interface TMSIssueDAO {
     long createIssue(TMSIssue issue);
 
-    TMSIssue deleteIssue(long issue_id);
+    TMSIssue deleteIssue(long issueId);
 
     void updateIssue(TMSIssue issue);
 

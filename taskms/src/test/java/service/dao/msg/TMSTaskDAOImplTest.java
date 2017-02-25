@@ -114,6 +114,18 @@ class TMSTaskDAOImplTest {
     }
 
     @Test
+    void deleteTask() {
+        List<Long> taskIds = new ArrayList<>();
+        for(int i = 0; i < 10; i ++) {
+            taskIds.add(createTask());
+        }
+        taskIds.forEach( id -> {
+            assertTrue(taskDAO.deleteTask(id).getId() == id);
+            assertNull(taskDAO.getTask(id));
+        });
+    }
+
+    @Test
     void updateTask() {
         long id = createTask();
 

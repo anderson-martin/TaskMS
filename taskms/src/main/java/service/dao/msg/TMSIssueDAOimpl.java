@@ -3,6 +3,7 @@ package service.dao.msg;
 import config.JPASessionUtil;
 import objectModels.msg.TMSIssue;
 import objectModels.msg.TMSIssue_;
+import objectModels.msg.TMSTask;
 import org.hibernate.Session;
 
 import javax.persistence.EntityManager;
@@ -29,9 +30,20 @@ public class TMSIssueDAOimpl implements TMSIssueDAO {
 
     @Override
     public TMSIssue deleteIssue(long issue_id) {
-        TMSIssue deleted = JPASessionUtil.getEntityManager().find(TMSIssue.class, issue_id);
-        JPASessionUtil.delete(deleted);
-        return deleted;
+        Session session = JPASessionUtil.getCurrentSession();
+        try {
+            session.beginTransaction();
+
+            TMSIssue deleted = session.find(TMSIssue.class, issue_id);
+            if (deleted == null) return null;
+            session.delete(deleted);
+
+            session.getTransaction().commit();
+            return deleted;
+        } catch (Exception ex) {
+            session.getTransaction().rollback();
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override

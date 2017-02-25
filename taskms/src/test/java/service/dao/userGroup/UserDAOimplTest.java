@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -617,5 +618,46 @@ public class UserDAOimplTest {
         userDAO.removeAllUsersFromGroup(group2.getId());
         assertTrue(userDAO.getUsersInGroup(group1.getId(), User.class).isEmpty());
         assertTrue(userDAO.getUsersInGroup(group2.getId(), User.class).isEmpty());
+    }
+
+    private long[] convert(List<Long> list) {
+        return list.stream().mapToLong(Long::longValue).toArray();
+    }
+
+    @Test
+    void testDoesGroupContains() {
+        List<User> users = new ArrayList<>();
+        for(int i = 0; i < 10 ; i ++) {
+            User user = createUser();
+            user.setUserName("user_" + i);
+            users.add(user);
+        }
+        users.forEach(userDAO::registerUser);
+        HierarchyGroup group = new HierarchyGroup("gruop");
+        hierarchyGroupDAO.registerGroup(group);
+
+
+
+        userDAO.removeAllUsersFromGroup(group.getId());
+
+
+        Random ran = new Random();
+
+        for(int i = 0; i < 100; i++) {
+            List<User> testUsers = new ArrayList<>();
+            for(User user : users) {
+                if(ran.nextDouble() > 0.5) {
+                    testUsers.add(user);
+                }
+            }
+            if(testUsers.isEmpty()) continue;
+            testUsers.forEach(user -> userDAO.addUserToGroup(group.getId(), user.getId()));
+            List<Long> userInGroup = testUsers.stream().map(user -> user.getId()).collect(Collectors.toList());
+            assertTrue(userDAO.doesGroupContains(group.getId(), convert(userInGroup)));
+            userInGroup.forEach( id -> assertTrue(userDAO.doesGroupContains(group.getId(), id)));
+            userDAO.removeAllUsersFromGroup(group.getId());
+        }
+
+        users.stream().map(user -> user.getId()).forEach( id -> assertFalse(userDAO.doesGroupContains(group.getId(), id)));
     }
 }
