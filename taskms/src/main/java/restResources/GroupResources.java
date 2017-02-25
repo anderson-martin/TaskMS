@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * Created by rohan on 2/18/17.
  */
-@Path("/group")
+@Path("/groups")
 public class GroupResources {
     private static final TMSService service = TMSServiceImpl.getSingleInstance();
 

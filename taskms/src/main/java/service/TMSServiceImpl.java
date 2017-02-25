@@ -99,6 +99,14 @@ public class TMSServiceImpl implements TMSService {
     }
 
     @Override
+    public UserView authenticate(Credential key) {
+        validateNonClosedUser(key);
+        // now its safe to get the key
+        long userId = Long.parseLong(key.getKey());
+        return generateUserView(userId);
+    }
+
+    @Override
     public List<UserBasicView> getAllUsers(Credential key) {
         validateHRManager(key);
         return new ArrayList<>(userDAO.getUsers(UserBasicView.class));
@@ -156,6 +164,7 @@ public class TMSServiceImpl implements TMSService {
         userView.setFirstName(user.getFirstName());
         userView.setLastName(user.getLastName());
         userView.setContactDetails(user.getContactDetail());
+        userView.setStatus(user.getStatus());
         userView.setGroups(new HashSet<>());
         user.getGroups().forEach( group ->
             userView.getGroups().add(generateGroupView(group)));
@@ -247,14 +256,14 @@ public class TMSServiceImpl implements TMSService {
         if (!gruopDAO.isRegisteredGroup(groupId)) throw new BadRequestException("invalid group id");
 
         DeactivationEffect deef = new DeactivationEffect();
-        deef.setUsers(userDAO.getUsersInGroup(groupId, Long.class));
+        deef.setAffectedUsers(userDAO.getUsersInGroup(groupId, Long.class));
         Set<Long> subordinateIds = gruopDAO.getSubordinateGroups(Long.class, groupId);
-        deef.setGroups(subordinateIds);
+        deef.setAffectedGroups(subordinateIds);
 
         Long managerId = gruopDAO.getManagerGroup(Long.class, groupId);
         if( managerId != null) {
-            deef.getGroups().add(managerId);
-            gruopDAO.unsetManagerGroup(groupId);
+            deef.getAffectedGroups().add(managerId);
+            gruopDAO.unsetManagerGroup(groupId); // free this group from its manager
         }
         gruopDAO.unsetManagerGroup(convert(subordinateIds));
         gruopDAO.setGroupStatus(groupId, HierarchyGroup.STATUS.CLOSED);

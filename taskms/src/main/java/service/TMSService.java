@@ -32,6 +32,14 @@ public interface TMSService {
     // USER
 
     /**
+     * Get the view of user identified by given key
+     * @param key key to identify user, which is currently user id
+     * @return user view
+     * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail, or user identified is CLOSED (401)
+     */
+    UserView authenticate(Credential key);
+
+    /**
      * Get all users in basic view in the system
      * Authorized: HR
      *

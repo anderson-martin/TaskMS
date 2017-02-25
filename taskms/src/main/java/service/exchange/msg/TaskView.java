@@ -9,6 +9,7 @@ import objectModels.basicViews.UserBasicView;
 import objectModels.msg.TMSTask;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
 public class TaskView {
@@ -21,7 +22,7 @@ public class TaskView {
     private Set<UserBasicView> recipients;
     private GroupBasicView recipientGroup;
     private Date deadline;
-
+    private Date created;
 
     public TaskView() {
     }
@@ -33,14 +34,24 @@ public class TaskView {
         taskView.setContent(task.getContent());
         taskView.setTitle(task.getTitle());
         taskView.setDeadline(task.getDueDate());
+        taskView.setCreated(task.getSentDate());
 
         taskView.setSender(UserBasicView.generate(task.getSender()));
         taskView.setSenderGroup(GroupBasicView.generate(task.getSenderGroup()));
         taskView.setRecipientGroup(GroupBasicView.generate(task.getRecipientGroup()));
+        taskView.setRecipients(new HashSet<>());
         if(task.getRecipients() != null && !task.getRecipients().isEmpty()) {
             task.getRecipients().forEach(rp -> taskView.getRecipients().add(UserBasicView.generate(rp)));
         }
         return taskView;
+    }
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
     }
 
     public TMSTask.STATUS getStatus() {

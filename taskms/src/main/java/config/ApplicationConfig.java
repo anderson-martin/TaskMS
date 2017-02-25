@@ -3,7 +3,7 @@ package config;
 /**
  * Created by rohan on 2/8/17.
  */
-import restResources.GroupResources;
+import restResources.*;
 import restResources.exceptionMapping.StateConflictionMapper;
 import restResources.test.TestRest;
 
@@ -15,10 +15,7 @@ import javax.ws.rs.core.Application;
  * READ more about the purpose of this file there, section Configuring JAX-RS Applications
  */
 
-/**
- * @author rohan
- */
-@javax.ws.rs.ApplicationPath("webresources")
+@javax.ws.rs.ApplicationPath("rest")
 public class ApplicationConfig extends Application {
 
     @Override
@@ -37,6 +34,10 @@ public class ApplicationConfig extends Application {
         resources.add(TestRest.class);
         resources.add(StateConflictionMapper.class);
         resources.add(GroupResources.class);
+        resources.add(Auth.class);
+        resources.add(UserResources.class);
+        resources.add(TaskResources.class);
+        resources.add(IssueResources.class);
         // register Jackson JSON providers
     }
 }

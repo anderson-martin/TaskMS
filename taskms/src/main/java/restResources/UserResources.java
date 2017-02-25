@@ -1,7 +1,13 @@
 package restResources;
 
-import objectModels.userGroup.ContactDetail;
-import objectModels.userGroup.User;
+import objectModels.basicViews.UserBasicView;
+import service.TMSService;
+import service.TMSServiceImpl;
+import service.TMSService.Credential;
+import service.exchange.userGroup.DeactivationEffect;
+import service.exchange.userGroup.UserRegister;
+import service.exchange.userGroup.UserUpdater;
+import service.exchange.userGroup.UserView;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -13,9 +19,12 @@ import java.util.List;
 @Path("/users")
 public class UserResources {
     // get the list of user for HR only
+    private static final TMSService service = TMSServiceImpl.getSingleInstance();
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public void getAllUsers() {}
+    public List<UserBasicView> getAllUsers(@HeaderParam("Authorization") String key) {
+        return service.getAllUsers(new Credential(key));
+    }
 //    {
 //        "userItems": [
 //        {
@@ -30,7 +39,9 @@ public class UserResources {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void registerUser() {}
+    public UserBasicView registerUser(@HeaderParam("Authorization") String key, UserRegister userRegister) {
+        return service.registerUser(new Credential(key), userRegister);
+    }
 //    consume {
 //        "contactDetails": {
 //        "phoneNumber": "1234567",
@@ -54,7 +65,10 @@ public class UserResources {
     @Path("/{userId}")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public UserResources deactivateUser() { return null;}
+    public DeactivationEffect deactivateUser(
+            @HeaderParam("Authorization") String key, @PathParam("userId") long userId) {
+        return service.deactivateUser(new Credential(key), userId);
+    }
 //    {
 //        "contactDetails": {
 //                "phoneNumber": "1234567",
@@ -92,7 +106,9 @@ public class UserResources {
     @Path("/{userId}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public UserResources getUserInfo(@HeaderParam("Authorization") String key, @PathParam("userId") long id) { return null;}
+    public UserView getUserInfo(@HeaderParam("Authorization") String key, @PathParam("userId") long userId) {
+        return service.getUserInfo(new Credential(key), userId);
+    }
 //    {
 //        "contactDetails": {
 //        "phoneNumber": "1234567",
@@ -114,22 +130,15 @@ public class UserResources {
 //  ],
 //    }
 
-    public class UpdateUser {
-        // HR -> update all
-        // user -> update his info except staus
-        private String firstName;
-        private String lastName;
-        private List<Long> groups;
-        private User.STATUS status;
-        private ContactDetail contactDetails;
-    }
 
     // update user
     @Path("/{userId}")
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void updateUser(@HeaderParam("Authorization") String key, UpdateUser updateUser) {}
+    public UserView updateUser(@HeaderParam("Authorization") String key, @PathParam("userId") long userId, UserUpdater updater) {
+        return service.updateUser(new Credential(key), userId, updater);
+    }
     // consume
 //    {
 //        "firstName": "Bob",
