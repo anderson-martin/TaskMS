@@ -1,25 +1,37 @@
 package restResources;
 
+import objectModels.basicViews.GroupBasicView;
+import service.TMSService;
+import service.TMSServiceImpl;
+import service.exchange.userGroup.DeactivationEffect;
+import service.exchange.userGroup.GroupRegister;
+import service.TMSService.Credential;
+import service.exchange.userGroup.GroupUpdater;
+import service.exchange.userGroup.GroupView;
+
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 /**
  * Created by rohan on 2/18/17.
  */
 @Path("/group")
 public class GroupResources {
+    private static final TMSService service = TMSServiceImpl.getSingleInstance();
+
     // get group information
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public String getGroupInformation() {
-        throw new UnsupportedOperationException();
+    public List<GroupBasicView> getAllGroups(@HeaderParam("Authorization") String key) {
+        return service.getAllGroups(new Credential(key));
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String creatGroup() {
-        throw new UnsupportedOperationException();
+    public GroupBasicView registerGroup(@HeaderParam("Authorization") String key, GroupRegister groupRegister) {
+        return service.registerGroup(new Credential(key), groupRegister);
     }
 //    consume:
 //    {
@@ -35,7 +47,10 @@ public class GroupResources {
     @Path("/{groupId}")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public void deactivateGroup() {}
+    public DeactivationEffect deactivateGroup(
+            @HeaderParam("Authorization") String key, @PathParam("groupId") long groupId) {
+        return service.deactivateGroup(new Credential(key), groupId);
+    }
 
 // produces
 //    {
@@ -63,8 +78,20 @@ public class GroupResources {
 
     @Path("/{groupId}")
     @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void updateGroup(){}
+    public GroupView updateGroup(@HeaderParam("Authorization") String key,
+                                 @PathParam("groupId") long groupId, GroupUpdater groupUpdater){
+        return service.updateGroup(new Credential(key), groupId, groupUpdater);
+    }
+
+    @Path("/{groupId}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public GroupView getGroupInfo(@HeaderParam("Authorization") String key, @PathParam("groupId") long groupId) {
+        return TMSServiceImpl.getSingleInstance().getGroupInfo(new Credential(key), groupId);
+    }
+
 //    consume:
 //{
 //  "name": "cashiers",
@@ -98,9 +125,4 @@ public class GroupResources {
 //  "id": 69,
 //  "name": "cashiers"
 //}
-
-
-
-
-
 }

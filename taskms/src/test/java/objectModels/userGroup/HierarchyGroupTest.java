@@ -43,13 +43,6 @@ public class HierarchyGroupTest {
         });
     }
 
-    @AfterEach
-    void clean() {
-        doWithCurrentSession(session -> {
-//            session.createQuery("delete from HierarchyGroup").executeUpdate();
-        });
-    }
-
     @Test
     void testPersistingHierarchyGroup() {
         persistHierarchyGroups();

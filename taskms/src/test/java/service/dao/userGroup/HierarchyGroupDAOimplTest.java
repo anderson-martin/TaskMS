@@ -2,9 +2,7 @@ package service.dao.userGroup;
 
 import config.JPASessionUtil;
 import objectModels.basicViews.GroupBasicView;
-import objectModels.basicViews.GroupExtendedView;
 import objectModels.userGroup.HierarchyGroup;
-import org.hibernate.query.Query;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -35,21 +33,6 @@ public class HierarchyGroupDAOimplTest {
     @BeforeEach
     void cleanUp() {
         cleanGroupTable();
-    }
-
-    @Test
-    void groupExtendedView() {
-        List<HierarchyGroup> groups = new ArrayList<>();
-        for(int i = 0 ; i < 10; i++) {
-            groups.add(new HierarchyGroup("group" + i));
-        }
-        groups.get(0).createSubordinateGroups(new HashSet<>(groups.subList(1,10)));
-        groups.forEach(group -> groupDAO.registerGroup(group));
-        JPASessionUtil.doWithCurrentSession(session ->  {
-            Query<GroupExtendedView> query = session.createQuery("from GroupExtendedView g where g.id = 1", GroupExtendedView.class);
-            GroupExtendedView groupBasicView = query.getSingleResult();
-            System.out.println(groupBasicView);
-        });
     }
 
     @Test
@@ -119,8 +102,11 @@ public class HierarchyGroupDAOimplTest {
         HierarchyGroup group2 = new HierarchyGroup("group2");
         group1.setManagerGroup(group2);
 
+        // group 2 must be persisted first, because of NO cascade
+        groupDAO.registerGroup(group2);
         groupDAO.registerGroup(group1);
-
+        assertTrue(group1.equals(groupDAO.getGroup(group1.getId())));
+        assertTrue(group2.equals(groupDAO.getGroup(group2.getId())));
     }
 
     @Test
@@ -193,18 +179,22 @@ public class HierarchyGroupDAOimplTest {
         long id4 = groupDAO.registerGroup(group4);
         long id5 = groupDAO.registerGroup(group5);
 
-        Set<HierarchyGroup> allGroups = groupDAO.getGroups();
+        Set<HierarchyGroup> allGroups_fullView = groupDAO.getGroups(HierarchyGroup.class);
+        Set<Long> allGroups_idView = groupDAO.getGroups(Long.class);
+        Set<GroupBasicView> allGroups_basicView = groupDAO.getGroups(GroupBasicView.class);
 
-        assertEquals(allGroups.size(), 5);
+        assertEquals(allGroups_fullView.size(), 5);
+        assertEquals(allGroups_basicView.size(), 5);
+        assertEquals(allGroups_idView.size(), 5);
 
 
         Set<Long> allGroupsIds = new HashSet<>();
-        allGroups.forEach( hrg -> allGroupsIds.add(hrg.getId()));
+        allGroups_fullView.forEach( hrg -> allGroupsIds.add(hrg.getId()));
         assertEquals(allGroupsIds, new HashSet<Long>(Arrays.asList(id1,id2,id3,id4,id5)));
     }
 
     @Test
-    void getGroupWithForSpecificStatus() {
+    void getGroupsWithForSpecificStatus() {
         HierarchyGroup group1 = new HierarchyGroup("group1");
         HierarchyGroup group2 = new HierarchyGroup("group2");
         HierarchyGroup group3 = new HierarchyGroup("group3");
@@ -223,34 +213,52 @@ public class HierarchyGroupDAOimplTest {
         long id4 = groupDAO.registerGroup(group4);
         long id5 = groupDAO.registerGroup(group5);
 
-        Set<HierarchyGroup> activeGroups = groupDAO.getGroups(HierarchyGroup.STATUS.ACTIVE);
-        Set<HierarchyGroup> closedGroups = groupDAO.getGroups(HierarchyGroup.STATUS.CLOSED);
+        Set<HierarchyGroup> activeGroups = groupDAO.getGroups(HierarchyGroup.class, HierarchyGroup.STATUS.ACTIVE);
+        Set<Long> activeGroups_id = groupDAO.getGroups(Long.class, HierarchyGroup.STATUS.ACTIVE);
+        Set<GroupBasicView> activeGroups_basic = groupDAO.getGroups(GroupBasicView.class, HierarchyGroup.STATUS.ACTIVE);
+        Set<HierarchyGroup> closedGroups = groupDAO.getGroups(HierarchyGroup.class, HierarchyGroup.STATUS.CLOSED);
+        Set<Long> closedGroups_id = groupDAO.getGroups(Long.class, HierarchyGroup.STATUS.CLOSED);
+        Set<GroupBasicView> closedGroups_basic = groupDAO.getGroups(GroupBasicView.class, HierarchyGroup.STATUS.CLOSED);
 
         assertEquals(activeGroups.size(), 3);
         assertEquals(closedGroups.size(), 2);
+        assertEquals(activeGroups_id.size(), 3);
+        assertEquals(closedGroups_id.size(), 2);
+        assertEquals(activeGroups_basic.size(), 3);
+        assertEquals(closedGroups_basic.size(), 2);
 
         Set<Long> allGroupsIds = new HashSet<>();
 
         allGroupsIds.clear();
         activeGroups.forEach( hrg -> allGroupsIds.add(hrg.getId()));
-        assertEquals(allGroupsIds, new HashSet<Long>(Arrays.asList(id1, id2, id3)));
+        assertEquals(allGroupsIds, new HashSet<>(Arrays.asList(id1, id2, id3)));
 
         allGroupsIds.clear();
         closedGroups.forEach( hrg -> allGroupsIds.add(hrg.getId()));
-        assertEquals(allGroupsIds, new HashSet<Long>(Arrays.asList(id4, id5)));
+        assertEquals(allGroupsIds, new HashSet<>(Arrays.asList(id4, id5)));
     }
     @Test
     void getGroupsEmptyResult() {
-        assertTrue(groupDAO.getGroups().isEmpty());
-        assertTrue(groupDAO.getGroups(HierarchyGroup.STATUS.ACTIVE).isEmpty());
-        assertTrue(groupDAO.getGroups(HierarchyGroup.STATUS.CLOSED).isEmpty());
+        assertTrue(groupDAO.getGroups(Long.class).isEmpty());
+        assertTrue(groupDAO.getGroups(HierarchyGroup.class).isEmpty());
+        assertTrue(groupDAO.getGroups(GroupBasicView.class).isEmpty());
+
+        assertTrue(groupDAO.getGroups(Long.class, HierarchyGroup.STATUS.ACTIVE).isEmpty());
+        assertTrue(groupDAO.getGroups(HierarchyGroup.class, HierarchyGroup.STATUS.ACTIVE).isEmpty());
+        assertTrue(groupDAO.getGroups(GroupBasicView.class, HierarchyGroup.STATUS.ACTIVE).isEmpty());
+
+        assertTrue(groupDAO.getGroups(Long.class, HierarchyGroup.STATUS.CLOSED).isEmpty());
+        assertTrue(groupDAO.getGroups(HierarchyGroup.class, HierarchyGroup.STATUS.CLOSED).isEmpty());
+        assertTrue(groupDAO.getGroups(GroupBasicView.class, HierarchyGroup.STATUS.CLOSED).isEmpty());
 
         HierarchyGroup hierarchyGroup = new HierarchyGroup("dang");
         long id = groupDAO.registerGroup(hierarchyGroup);
         groupDAO.setGroupStatus(id, HierarchyGroup.STATUS.ACTIVE);
-        assertTrue(groupDAO.getGroups().size() == 1);
-        assertTrue(groupDAO.getGroups(HierarchyGroup.STATUS.CLOSED).isEmpty());
-        assertTrue(groupDAO.getGroups(HierarchyGroup.STATUS.ACTIVE).contains(hierarchyGroup));
+        assertTrue(groupDAO.getGroups(Long.class).size() == 1);
+        assertTrue(groupDAO.getGroups(HierarchyGroup.class).size() == 1);
+        assertTrue(groupDAO.getGroups(GroupBasicView.class).size() == 1);
+        assertTrue(groupDAO.getGroups(GroupBasicView.class, HierarchyGroup.STATUS.CLOSED).isEmpty());
+        assertTrue(groupDAO.getGroups(HierarchyGroup.class, HierarchyGroup.STATUS.ACTIVE).contains(hierarchyGroup));
     }
 
 
@@ -268,13 +276,15 @@ public class HierarchyGroupDAOimplTest {
         groupDAO.setManagerGroup(id1, id2, id3);
 
         group1 = groupDAO.getGroup(id1);
+        assertTrue(group1.getSubordinateGroups().size() == 2);
         assertTrue(group1.getSubordinateGroups().contains(groupDAO.getGroup(id2)));
         assertTrue(group1.getSubordinateGroups().contains(groupDAO.getGroup(id3)));
-        System.out.println(group1);
-    }
 
+        assertTrue(groupDAO.getGroup(id2).getManagerGroup().equals(group1));
+        assertTrue(groupDAO.getGroup(id3).getManagerGroup().equals(group1));
+    }
     @Test
-    void setManagerGroupForGroupItself() {
+    void setItselfAsItsManagerGroup() {
         HierarchyGroup group1 = new HierarchyGroup("group1111");
 
         long id1 = groupDAO.registerGroup(group1);
@@ -283,9 +293,9 @@ public class HierarchyGroupDAOimplTest {
 
         group1 = groupDAO.getGroup(id1);
         assertTrue(group1.getSubordinateGroups().contains(groupDAO.getGroup(id1)));
+        assertTrue(group1.getManagerGroup().equals(group1));
         System.out.println(group1);
     }
-
     @Test
     void setManagerGroupWithNonExistentGroup() {
         long fantasy = Long.MAX_VALUE;
@@ -295,16 +305,29 @@ public class HierarchyGroupDAOimplTest {
         group1 = groupDAO.getGroup(id1);
         assertTrue(group1.getSubordinateGroups().isEmpty());
     }
-
     @Test
     void setManagerGroupForNonexistentGroup() {
         groupDAO.setManagerGroup(Long.MIN_VALUE, Long.MAX_VALUE);
-        assertTrue(true, "nothing should happen");
         assertTrue(groupDAO.getGroup(Long.MAX_VALUE) == null);
         assertTrue(groupDAO.getGroup(Long.MIN_VALUE) == null);
     }
 
-
+    @Test
+    void unsetManagerGroup() {
+        List<HierarchyGroup> groups = new ArrayList<>();
+        for(int i = 0; i < 10; i++) { groups.add(new HierarchyGroup("group" + i)); }
+        groups.forEach(group -> groupDAO.registerGroup(group));
+        long[] subordinateIds = new long[9];
+        for(int i = 0; i < 9 ; i++) {subordinateIds[i] = groups.get(i).getId();}
+        groupDAO.setManagerGroup(groups.get(0).getId(), subordinateIds);
+        assertTrue(groupDAO.getGroup(groups.get(0).getId()).getSubordinateGroups().size() == 9);
+        groupDAO.unsetManagerGroup(subordinateIds);
+        assertTrue(groupDAO.getGroup(groups.get(0).getId()).getSubordinateGroups().isEmpty());
+        for(long id : subordinateIds) {
+            assertNull(groupDAO.getGroup(id).getManagerGroup());
+            assertTrue(groupDAO.getGroup(id).getSubordinateGroups().isEmpty());
+        }
+    }
 
     // get subordinate groups with many view,
     // group status not tested
@@ -364,9 +387,25 @@ public class HierarchyGroupDAOimplTest {
                     new GroupBasicView(groups.get(0).getId(), groups.get(0).getName(), groups.get(0).getStatus())));
         });
 
-        // g0 have so manager group
+        // g0 have no manager group
         assertNull(groupDAO.getManagerGroup(Long.class, groups.get(0).getId()));
         assertNull(groupDAO.getManagerGroup(HierarchyGroup.class, groups.get(0).getId()));
         assertNull(groupDAO.getManagerGroup(GroupBasicView.class, groups.get(0).getId()));
     }
-}
+
+    @Test
+    void getManagerGroup_invalidId() {
+        assertNull(groupDAO.getManagerGroup(Long.class, 0));
+        assertNull(groupDAO.getManagerGroup(Long.class, Long.MAX_VALUE));
+        assertNull(groupDAO.getManagerGroup(Long.class, Long.MIN_VALUE));
+
+        assertNull(groupDAO.getManagerGroup(GroupBasicView.class, 0));
+        assertNull(groupDAO.getManagerGroup(GroupBasicView.class, Long.MAX_VALUE));
+        assertNull(groupDAO.getManagerGroup(GroupBasicView.class, Long.MIN_VALUE));
+
+        assertNull(groupDAO.getManagerGroup(HierarchyGroup.class, 0));
+        assertNull(groupDAO.getManagerGroup(HierarchyGroup.class, Long.MAX_VALUE));
+        assertNull(groupDAO.getManagerGroup(HierarchyGroup.class, Long.MIN_VALUE));
+    }
+
+ }

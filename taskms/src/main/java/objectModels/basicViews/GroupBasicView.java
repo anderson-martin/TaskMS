@@ -33,6 +33,11 @@ public class GroupBasicView {
         setId(id);
     }
 
+    public static GroupBasicView generate(HierarchyGroup group) {
+        if(group == null) return null;
+        return new GroupBasicView(group.getId(), group.getName(), group.getStatus());
+    }
+
     @Override
     public String toString() {
         return "GroupBasicView { id = " + id + ", name = " + name + ", status = " + status + " }";

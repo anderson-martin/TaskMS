@@ -9,8 +9,9 @@ public interface UserDAO {
 
     long registerUser(User user);
 
+    boolean isRegisteredUser(long userId);
+    boolean isRegisteredUser(String userName);
     void updateUser(User user);
-
     /**
      * Find registered user by id
      * @param id id of user to be found
@@ -41,7 +42,7 @@ public interface UserDAO {
      * @param statuses status to filter
      * @return a set containing registered users will given filter
      */
-    Set<User> getUsers(User.STATUS... statuses);
+    <T> Set<T> getUsers(Class<T> view, User.STATUS... statuses);
 
     User.STATUS getUserStatus(long user_id);
 

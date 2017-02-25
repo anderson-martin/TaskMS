@@ -85,12 +85,37 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
     }
 
     @Override
-    public Set<HierarchyGroup> getGroups(HierarchyGroup.STATUS... statuses) {
-        if(statuses == null) return new HashSet<>();
+    public <T> Set<T> getGroups(Class<T> view, HierarchyGroup.STATUS... statuses) {
+        if(view == HierarchyGroup.class) {
+            return (Set<T>) getGroups_fullView(statuses);
+        } else if ( view == GroupBasicView.class) {
+            return (Set<T>) getGroups_basicView(statuses);
+        } else if ( view == Long.class) {
+            return (Set<T>) getGroups_idView(statuses);
+        }
+        throw new IllegalArgumentException("Unsupported view");
+    }
+    private Set<HierarchyGroup> getGroups_fullView(HierarchyGroup.STATUS... statuses) {
         TypedQuery<HierarchyGroup> query = JPASessionUtil.getEntityManager().createQuery(
                 "select  gr from HierarchyGroup  gr where gr.status in :statuses", HierarchyGroup.class
         );
         query.setParameter("statuses",statuses.length == 0 ? Arrays.asList(HierarchyGroup.STATUS.values()) : Arrays.asList(statuses));
+        return new HashSet<>(query.getResultList());
+    }
+    private Set<Long> getGroups_idView(HierarchyGroup.STATUS... statuses) {
+        TypedQuery<Long> query = JPASessionUtil.getEntityManager().createQuery(
+                "select gr.id from HierarchyGroup  gr where gr.status in :statuses", Long.class
+        );
+        query.setParameter("statuses",statuses.length == 0 ? Arrays.asList(HierarchyGroup.STATUS.values()) : Arrays.asList(statuses));
+        return new HashSet<>(query.getResultList());
+    }
+    private Set<GroupBasicView> getGroups_basicView(HierarchyGroup.STATUS... statuses) {
+        Set<Long> ids = getGroups_idView(statuses);
+        if(ids.isEmpty()) return new HashSet<>();
+        TypedQuery<GroupBasicView> query = JPASessionUtil.getEntityManager().createQuery(
+                "from GroupBasicView  gr where gr.id in :ids", GroupBasicView.class
+        );
+        query.setParameter("ids", ids);
         return new HashSet<>(query.getResultList());
     }
 
@@ -128,15 +153,11 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
 
     @Override
     public void setManagerGroup(long managerGroup_id, long... subordinate_ids) {
-        if(subordinate_ids == null) throw new IllegalArgumentException("get a null value");
-
         Session session = JPASessionUtil.getCurrentSession();
         try {
             session.beginTransaction();
-            // consider using SQL for better performance
             Query query = session.createQuery("update HierarchyGroup hg set hg.managerGroup.id = :manager_id where hg.id IN :ids");
             query.setParameter("manager_id", managerGroup_id);
-//            List<Long> ids = Arrays.asList(subordinate_ids);
             query.setParameter("ids", converts(subordinate_ids));
             query.executeUpdate();
 
@@ -144,7 +165,22 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
         } catch (Exception ex) {
             rollBack(session.getTransaction());
             throw new RuntimeException(ex);
-//            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    public void unsetManagerGroup(long... subordinate_ids) {
+        Session session = JPASessionUtil.getCurrentSession();
+        try {
+            session.beginTransaction();
+            Query query = session.createQuery("update HierarchyGroup hg set hg.managerGroup = :val where hg.id IN :ids");
+            query.setParameter("val", null);
+            query.setParameter("ids", converts(subordinate_ids));
+            query.executeUpdate();
+            session.getTransaction().commit();
+        } catch (Exception ex) {
+            rollBack(session.getTransaction());
+            throw new RuntimeException(ex);
         }
     }
 

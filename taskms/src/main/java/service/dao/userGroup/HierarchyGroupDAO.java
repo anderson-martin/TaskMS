@@ -50,16 +50,31 @@ public interface HierarchyGroupDAO {
      */
     long getGroupIdByName(String groupName);
 
-    //
-    Set<HierarchyGroup> getGroups(HierarchyGroup.STATUS... statuses);
 
     // this method is not of good value now
-    // <T> Set<T> getGroups(Class<T> view, TMSIssue.STATUS... statuses);
+    <T> Set<T> getGroups(Class<T> view, HierarchyGroup.STATUS... statuses);
 
     <T> Set<T> getSubordinateGroups(Class<T> view, long groupId, HierarchyGroup.STATUS... statuses);
+
+    /**
+     * Get managerGroup of the group with given id
+     * @param view
+     * @param groupId
+     * @param <T>
+     * @return managerGroup of the group identified by given id
+     * or null if no such managerGroup is found, or there exists
+     * no group with given id
+     */
     <T> T getManagerGroup(Class<T> view, long groupId);
 
     // UPDATE UTILITIES
     void setGroupStatus(long group_id, HierarchyGroup.STATUS status);
     void setManagerGroup(long managerGroup_id, long... subordinate_ids );
+
+    /**
+     * Un set manager group of the groups having given ids.
+     * After this operation, those group will not have manager group.
+     * @param subordinate_ids ids of group to be free from their manager group
+     */
+    void unsetManagerGroup(long... subordinate_ids);
 }

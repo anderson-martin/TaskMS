@@ -5,6 +5,7 @@ import objectModels.basicViews.UserBasicView;
 import service.exchange.userGroup.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by rohan on 2/9/17.
@@ -42,27 +43,27 @@ public interface TMSService {
      * Authorized: HR
      *
      * @param key         authorize credential
-     * @param userUpdater
+     * @param userRegister
      * @return basicView of the newly created user
      * @throws javax.ws.rs.BadRequestException if the user's userName, or firstName, or lastName is null; (400)
      * @throws service.exception.StateConflict if userName already exists! (409)
      * @throws javax.ws.rs.ForbiddenException  if authorize credential fail (403)
      */
-    UserBasicView registerUser(Credential key, UserUpdater userUpdater);
+    UserBasicView registerUser(Credential key, UserRegister userRegister);
 
     /**
      * Deactivate user from the system by
      * + change state of use to inactive
      * + remove this user from all groups (s)he belongs to
      * Authorized: HR
-     *
      * @param key    authorize credential
      * @param userId user id to be deactivated
-     * @return deactivated user in full view as a result of the deactivation
+     * @return a set of group id referring to the group that is affected by this method,
+     * namely group that has this user removed
      * @throws javax.ws.rs.BadRequestException if user's id is invalid (400)
      * @throws javax.ws.rs.ForbiddenException  if authorize credential fail (403)
      */
-    UserView deactivateUser(Credential key, Long userId);
+    DeactivationEffect deactivateUser(Credential key, Long userId);
 
     /**
      * Update an user identified by given id
@@ -79,8 +80,8 @@ public interface TMSService {
     /**
      * Get information about an user:
      * Authorized:
-     * + HR
-     * + An user can see the detail of all users in his group, his manager group if exists, his subordinate groups if exist
+     * + HR can see all user in the system regardless of status
+     * + An user can see the detail of active user only
      *
      * @param key
      * @param id  id of an user registered in the system
@@ -128,7 +129,7 @@ public interface TMSService {
      * @throws javax.ws.rs.BadRequestException if group's id is invalid (400)
      * @throws javax.ws.rs.ForbiddenException  if authorize credential fail (403)
      */
-    GroupView deactivateGroup(Credential key, Long groupId);
+    DeactivationEffect deactivateGroup(Credential key, Long groupId);
 
     /**
      * Update a group identified by given id
@@ -142,13 +143,13 @@ public interface TMSService {
      *                                         there exists invalid user id in user id set (400)
      * @throws javax.ws.rs.ForbiddenException  if authorize credential fail (403)
      */
-    GroupView updateGroup(Credential key, long userId, GroupUpdater groupUpdater);
+    GroupView updateGroup(Credential key, long groupId, GroupUpdater groupUpdater);
 
     /**
      * Get information about an user:
      * Authorized:
-     * + HR
-     * + An user can see the detail his group, his manager group if exists, and his subordinate groups if exist
+     * + HR can see detail of all group regardless of the group status
+     * + An user can see the detail of active group only
      *
      * @param key
      * @param groupId id of an group to be updated in the system

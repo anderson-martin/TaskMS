@@ -3,6 +3,7 @@ package config;
 /**
  * Created by rohan on 2/8/17.
  */
+import restResources.GroupResources;
 import restResources.exceptionMapping.StateConflictionMapper;
 import restResources.test.TestRest;
 
@@ -35,6 +36,7 @@ public class ApplicationConfig extends Application {
     private void addRestResourceClasses(Set<Class<?>> resources) {
         resources.add(TestRest.class);
         resources.add(StateConflictionMapper.class);
+        resources.add(GroupResources.class);
         // register Jackson JSON providers
     }
 }

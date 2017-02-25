@@ -1,5 +1,6 @@
 package objectModels.basicViews;
 
+import objectModels.userGroup.User;
 import org.hibernate.annotations.Immutable;
 
 import javax.persistence.*;
@@ -15,27 +16,36 @@ public class UserBasicView {
     @GeneratedValue
     private long id;
 
-    @Column
+    @Column(unique = true, nullable = false, length = 25, updatable = false)
     private String userName;
 
-    @Column
+    @Column(length = 25, nullable = false)
     private String firstName;
-    @Column
+    @Column(length = 25, nullable = false)
     private String lastName;
 
+    @Column(nullable = false)
+    private User.STATUS status = User.STATUS.ACTIVE;
+
     public UserBasicView() {}
-    public UserBasicView(long id, String userName, String firstName, String lastName) {
+    public UserBasicView(long id, String userName, String firstName, String lastName, User.STATUS status) {
         setId(id);
         setFirstName(firstName);
         setLastName(lastName);
         setUserName(userName);
+        setStatus(status);
     }
 
+    //useful factory method
+    public static UserBasicView generate(User user ) {
+        if(user == null) return  null;
+        return new UserBasicView(user.getId(), user.getUserName(), user.getFirstName(), user.getLastName(), user.getStatus());
+    }
 
     @Override
     public String toString() {
         return "UserBasicView { id = " + id + ", userName = " + userName +
-                ", firstName = " + firstName + ", lastName = " + lastName + " }";
+                ", firstName = " + firstName + ", lastName = " + lastName + ", status = " + status + " }";
     }
 
     public long getId() {
@@ -68,6 +78,14 @@ public class UserBasicView {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public User.STATUS getStatus() {
+        return status;
+    }
+
+    public void setStatus(User.STATUS status) {
+        this.status = status;
     }
 
     @Override

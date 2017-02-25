@@ -6,11 +6,12 @@ import objectModels.basicViews.UserBasicView;
 import objectModels.userGroup.ContactDetail;
 import objectModels.userGroup.HierarchyGroup;
 import objectModels.userGroup.User;
+import org.hibernate.PropertyValueException;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.DataException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.commons.annotation.Testable;
 
-import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -81,9 +82,20 @@ public class UserDAOimplTest {
         final HierarchyGroup registeredGroup1 = hierarchyGroupDAO.getGroup(group_id_1);
         final HierarchyGroup registeredGroup2 = hierarchyGroupDAO.getGroup(group_id_2);
         final HierarchyGroup registeredGroup3 = hierarchyGroupDAO.getGroup(group_id_3);
-        user.getGroups().addAll(Arrays.asList(registeredGroup1, registeredGroup2, registeredGroup3));
+
+        // dummy group with the right id is enough to register an user with groups
+        HierarchyGroup dummyGroup1 = new HierarchyGroup("dummy1");
+        HierarchyGroup dummyGroup2 = new HierarchyGroup("dummy2");
+        HierarchyGroup dummyGroup3 = new HierarchyGroup("dummy3");
+        dummyGroup1.setId(group_id_1);
+        dummyGroup2.setId(group_id_2);
+        dummyGroup3.setId(group_id_3);
+
+//        user.getGroups().addAll(Arrays.asList(registeredGroup1, registeredGroup2, registeredGroup3));
+        user.getGroups().addAll(Arrays.asList(dummyGroup1, dummyGroup2, dummyGroup3));
+
         final long user_id = userDAO.registerUser(user);
-        user.setId(user_id);
+//        user.setId(user_id); not necessary, user have its id assigned in the previous line
         final User registeredUser = userDAO.getUser(user_id);
         assertTrue(registeredUser.equals(user));
         assertTrue(registeredUser.getGroups().size() == 3);
@@ -107,6 +119,71 @@ public class UserDAOimplTest {
         assertThrows(RuntimeException.class,
                 () -> userDAO.registerUser(user)
         );
+    }
+    @Test
+    void registerUser_nullFieldValue() {
+        User user = createUser();
+        // first name
+        user.setFirstName(null);
+        try {
+            userDAO.registerUser(user);
+        } catch (RuntimeException ex) {
+            assertTrue(ex.getCause().getClass() == PropertyValueException.class);
+        }
+        // last name
+        user = createUser();
+        user.setLastName(null);
+        try {
+            userDAO.registerUser(user);
+        } catch (RuntimeException ex) {
+            assertTrue(ex.getCause().getClass() == PropertyValueException.class);
+        }
+        // user name
+        user = createUser();
+        user.setUserName(null);
+        try {
+            userDAO.registerUser(user);
+        } catch (RuntimeException ex) {
+            assertTrue(ex.getCause().getClass() == PropertyValueException.class);
+        }
+    }
+    @Test
+    void registerUserWithLongName() {
+        User user = createUser();
+        user.setLastName("qwertuiasdlfhasjkdfhuiwetzxkbnlzxm,vbklasdthjkasghdkagbjk");
+        try {
+            userDAO.registerUser(user);
+        } catch ( RuntimeException ex) {
+            assertTrue(ex.getCause().getClass() == DataException.class);
+        }
+    }
+    @Test
+    void registerUserWithDuplicateUserName() {
+        userDAO.registerUser(createUser());
+        try {
+            userDAO.registerUser(createUser());
+        } catch (RuntimeException ex) {
+            assertTrue(ex.getCause().getClass() == ConstraintViolationException.class);
+        }
+    }
+
+    @Test
+    void isRegisteredUser() {
+        assertFalse(userDAO.isRegisteredUser(0));
+        assertFalse(userDAO.isRegisteredUser(1));
+        assertFalse(userDAO.isRegisteredUser(-1));
+        assertFalse(userDAO.isRegisteredUser(Long.MAX_VALUE));
+        assertFalse(userDAO.isRegisteredUser(Long.MIN_VALUE));
+        assertFalse(userDAO.isRegisteredUser(""));
+        assertFalse(userDAO.isRegisteredUser("  "));
+        assertFalse(userDAO.isRegisteredUser("123"));
+        assertFalse(userDAO.isRegisteredUser("a b c"));
+        assertFalse(userDAO.isRegisteredUser("(*^HBJKT&^%V"));
+
+        User user = createUser();
+        userDAO.registerUser(user);
+        assertTrue(userDAO.isRegisteredUser(user.getId()));
+        assertTrue(userDAO.isRegisteredUser(user.getUserName()));
     }
 
     @Test
@@ -171,22 +248,39 @@ public class UserDAOimplTest {
         users.forEach(user -> user.setStatus(User.STATUS.HR_MANAGER));
         users.forEach(user -> userDAO.registerUser(user));
         // 3 user, all HR
-        Set<User> hr_users = userDAO.getUsers(User.STATUS.HR_MANAGER);
+        // > full view + filter
+        Set<User> hr_users = userDAO.getUsers(User.class, User.STATUS.HR_MANAGER);
         assertTrue(hr_users.size() == 3);
         users.forEach(user -> assertTrue(hr_users.contains(user)));
+        // > basic view + filter
+        Set<UserBasicView> hr_users_bv = userDAO.getUsers(UserBasicView.class, User.STATUS.HR_MANAGER);
+        assertTrue(hr_users.size() == 3);
+        users.forEach(user -> assertTrue(hr_users_bv.contains(UserBasicView.generate(user))));
+        // > id view + filter
+        assertTrue(userDAO.getUsers(Long.class, User.STATUS.HR_MANAGER).size() == 3);
+        // > full view - filter
+        assertTrue(userDAO.getUsers(User.class ).size() == 3);
+        assertTrue(userDAO.getUsers(User.class, User.STATUS.ACTIVE).isEmpty());
+        assertTrue(userDAO.getUsers(User.class, User.STATUS.CLOSED).isEmpty());
+        // > basic view - filter
+        assertTrue(userDAO.getUsers(UserBasicView.class ).size() == 3);
+        assertTrue(userDAO.getUsers(UserBasicView.class, User.STATUS.ACTIVE).isEmpty());
+        assertTrue(userDAO.getUsers(UserBasicView.class, User.STATUS.CLOSED).isEmpty());
+        // > id view  - filter
+        assertTrue(userDAO.getUsers(Long.class ).size() == 3);
+        assertTrue(userDAO.getUsers(Long.class, User.STATUS.ACTIVE).isEmpty());
+        assertTrue(userDAO.getUsers(Long.class, User.STATUS.CLOSED).isEmpty());
 
-        assertTrue(userDAO.getUsers().size() == 3);
-        assertTrue(userDAO.getUsers(User.STATUS.ACTIVE).isEmpty());
-        assertTrue(userDAO.getUsers(User.STATUS.CLOSED).isEmpty());
         // now 3 user: 1 CLOSED, 2 HR
         user1.setStatus(User.STATUS.CLOSED);
         userDAO.updateUser(user1);
-        assertTrue(userDAO.getUsers(User.STATUS.CLOSED).contains(user1));
-        assertTrue(userDAO.getUsers(User.STATUS.CLOSED).size() == 1);
-        assertTrue(userDAO.getUsers(User.STATUS.ACTIVE).isEmpty());
-        assertTrue(userDAO.getUsers(User.STATUS.HR_MANAGER).size() == 2);
-        assertTrue(userDAO.getUsers().size() == 3);
+        assertTrue(userDAO.getUsers(User.class, User.STATUS.CLOSED).contains(user1));
+        assertTrue(userDAO.getUsers(User.class, User.STATUS.CLOSED).size() == 1);
+        assertTrue(userDAO.getUsers(User.class, User.STATUS.ACTIVE).isEmpty());
+        assertTrue(userDAO.getUsers(User.class, User.STATUS.HR_MANAGER).size() == 2);
+        assertTrue(userDAO.getUsers(User.class).size() == 3);
     }
+
     @Test
     void getUserStatus() {
         User user = createUser();
@@ -194,8 +288,17 @@ public class UserDAOimplTest {
         assertTrue(user.getStatus() == userDAO.getUserStatus(user.getId()));
     }
 
+    @Test
+    void getUserStatus_invalidUser() {
+        assertNull(userDAO.getUserStatus(0));
+        assertNull(userDAO.getUserStatus(1));
+        assertNull(userDAO.getUserStatus(-1));
+        assertNull(userDAO.getUserStatus(Long.MAX_VALUE));
+        assertNull(userDAO.getUserStatus(Long.MIN_VALUE));
+    }
+
     private UserBasicView getBasicViewForUser(User user) {
-        return new UserBasicView(user.getId(), user.getUserName(), user.getFirstName(), user.getLastName());
+        return new UserBasicView(user.getId(), user.getUserName(), user.getFirstName(), user.getLastName(), user.getStatus());
     }
 
     @Test

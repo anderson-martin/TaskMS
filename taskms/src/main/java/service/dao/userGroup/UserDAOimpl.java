@@ -10,6 +10,7 @@ import org.hibernate.Session;
 import org.hibernate.query.Query;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -33,9 +34,24 @@ public class UserDAOimpl implements UserDAO {
 
     @Override
     public long registerUser(User user) {
-        System.out.println("vittu");
         if (user.getId() != 0) throw new IllegalArgumentException("Transient object should not have id");
         return JPASessionUtil.persist(user);
+    }
+
+    @Override
+    public boolean isRegisteredUser(long userId) {
+        EntityManager em = JPASessionUtil.getEntityManager();
+        TypedQuery<Long> query  = em.createQuery(
+                "SELECT COUNT(u) FROM User u WHERE u.id = :id", Long.class);
+        return query.setParameter("id", userId).getSingleResult() == 1;
+    }
+
+    @Override
+    public boolean isRegisteredUser(String userName) {
+        EntityManager em = JPASessionUtil.getEntityManager();
+        TypedQuery<Long> query  = em.createQuery(
+                "SELECT COUNT(u) FROM User u WHERE u.userName = :userName", Long.class);
+        return query.setParameter("userName", userName).getSingleResult() == 1;
     }
 
     @Override
@@ -74,11 +90,38 @@ public class UserDAOimpl implements UserDAO {
     }
 
     @Override
-    public Set<User> getUsers(User.STATUS... statuses) {
+    public <T> Set<T> getUsers(Class<T> view, User.STATUS... statuses) {
+        if(view == User.class) {
+            return (Set<T>) getUsers_fullView(statuses);
+        } else if (view  == UserBasicView.class) {
+            return (Set<T>) getUsers_basicView(statuses);
+        } else if (view == Long.class) {
+            return (Set<T>) getUsers_idView(statuses);
+        }
+        throw new IllegalArgumentException("invalid view");
+    }
+    private Set<User> getUsers_fullView(User.STATUS... statuses) {
         TypedQuery<User> query = JPASessionUtil.getEntityManager().createQuery(
-                "select  us from User  us where us.status in :statuses", User.class
+                "select  us from User us where us.status in :statuses", User.class
         );
         query.setParameter("statuses", statuses.length == 0 ? Arrays.asList(User.STATUS.values()) : Arrays.asList(statuses));
+        return new HashSet<>(query.getResultList());
+    }
+    private Set<Long> getUsers_idView(User.STATUS... statuses) {
+        TypedQuery<Long> query = JPASessionUtil.getEntityManager().createQuery(
+                "select  us.id from User  us where us.status in :statuses", Long.class
+        );
+        query.setParameter("statuses", statuses.length == 0 ? Arrays.asList(User.STATUS.values()) : Arrays.asList(statuses));
+        return new HashSet<>(query.getResultList());
+    }
+
+    private Set<UserBasicView> getUsers_basicView(User.STATUS... statuses) {
+        Set<Long> ids = getUsers_idView(statuses);
+        if(ids.isEmpty()) return new HashSet<>();
+        TypedQuery<UserBasicView> query = JPASessionUtil.getEntityManager().createQuery(
+                "from UserBasicView ubv where ubv.id in :ids", UserBasicView.class
+        );
+        query.setParameter("ids",ids);
         return new HashSet<>(query.getResultList());
     }
 
@@ -94,10 +137,12 @@ public class UserDAOimpl implements UserDAO {
         ));
         try {
             return em.createQuery(query).setParameter("userId", user_id).getSingleResult();
-        } catch (Exception e) {
-            // return null is there some exception
-            e.printStackTrace();
+        } catch (NoResultException ex) {
+            System.out.println("Because no user exist, status is NULL:");
             return null;
+        } catch (Exception ex) {
+            // strange error, FAIL FAST
+            throw new RuntimeException(ex);
         }
     }
 
@@ -113,14 +158,16 @@ public class UserDAOimpl implements UserDAO {
 
     @Override
     public <T> Set<T> getUsersInGroup(long group_id, Class<T> view, User.STATUS... userStatuses) {
-        if(view == User.class) {
+        if (view == User.class) {
             return (Set<T>) getUsersInGroupFullView(group_id, userStatuses);
         } else if (view == Long.class) {
             return (Set<T>) getUsersInGroupIdView(group_id, userStatuses);
         } else if (view == UserBasicView.class) {
             return (Set<T>) getUsersInGroupBasicView(group_id, userStatuses);
-        } else throw new IllegalArgumentException("view param must be either User.class or Long.class or UserBasicView.class");
+        } else
+            throw new IllegalArgumentException("view param must be either User.class or Long.class or UserBasicView.class");
     }
+
     private Set<User> getUsersInGroupFullView(long group_id, User.STATUS... userStatuses) {
         // really complicate query
         Session session = JPASessionUtil.getCurrentSession();
@@ -140,6 +187,7 @@ public class UserDAOimpl implements UserDAO {
             throw new RuntimeException(ex);
         }
     }
+
     private Set<Long> getUsersInGroupIdView(long group_id, User.STATUS... userStatuses) {
         // really complicate query
         Session session = JPASessionUtil.getCurrentSession();
@@ -159,9 +207,10 @@ public class UserDAOimpl implements UserDAO {
             throw new RuntimeException(ex);
         }
     }
+
     private Set<UserBasicView> getUsersInGroupBasicView(long group_id, User.STATUS... userStatuses) {
         Set<Long> ids = getUsersInGroupIdView(group_id, userStatuses);
-        if(ids.isEmpty()) return new HashSet<>(); // becasue where usb.id in () is invalid
+        if (ids.isEmpty()) return new HashSet<>(); // becasue where usb.id in () is invalid
         Session session = JPASessionUtil.getCurrentSession();
         try {
             session.beginTransaction();
@@ -180,7 +229,7 @@ public class UserDAOimpl implements UserDAO {
 
     @Override
     public <T> Set<T> getGroupsForUser(long user_id, Class<T> view, HierarchyGroup.STATUS... statuses) {
-        if(view == Long.class) {
+        if (view == Long.class) {
             return (Set<T>) getGroupForUserIdView(user_id, statuses);
         } else if (view == HierarchyGroup.class) {
             return (Set<T>) getGroupsForUserFullView(user_id, statuses);
@@ -190,7 +239,8 @@ public class UserDAOimpl implements UserDAO {
             throw new IllegalArgumentException("view should be either Long.class for ids , HierarchyGroup.class, or GroupBasicView.class");
         }
     }
-    private Set<Long> getGroupForUserIdView(long user_id, HierarchyGroup.STATUS... statuses){
+
+    private Set<Long> getGroupForUserIdView(long user_id, HierarchyGroup.STATUS... statuses) {
         Session session = JPASessionUtil.getCurrentSession();
         try {
             // really complicate query
@@ -209,9 +259,10 @@ public class UserDAOimpl implements UserDAO {
             throw new RuntimeException(ex);
         }
     }
-    private Set<GroupBasicView> getGroupForUserBasicView(long user_id, HierarchyGroup.STATUS... statuses){
+
+    private Set<GroupBasicView> getGroupForUserBasicView(long user_id, HierarchyGroup.STATUS... statuses) {
         Set<Long> ids = getGroupForUserIdView(user_id, statuses);
-        if(ids.isEmpty()) return new HashSet<>();
+        if (ids.isEmpty()) return new HashSet<>();
 
         Session session = JPASessionUtil.getCurrentSession();
         try {
@@ -228,6 +279,7 @@ public class UserDAOimpl implements UserDAO {
             throw new RuntimeException(ex);
         }
     }
+
     private Set<HierarchyGroup> getGroupsForUserFullView(long user_id, HierarchyGroup.STATUS... statuses) {
         Session session = JPASessionUtil.getCurrentSession();
         try {
