@@ -13,18 +13,41 @@ import java.util.Set;
 
 public class TaskView {
     private long id;
-    private String description;
+    private String content;
     private String title;
+    private TMSTask.STATUS status;
     private UserBasicView sender;
     private GroupBasicView senderGroup;
     private Set<UserBasicView> recipients;
     private GroupBasicView recipientGroup;
     private Date deadline;
 
+
     public TaskView() {
     }
 
-    public void load(TMSTask task ) {}
+    public static TaskView generate(TMSTask task) {
+        TaskView taskView = new TaskView();
+        taskView.setId(task.getId());
+        taskView.setStatus(task.getStatus());
+        taskView.setContent(task.getContent());
+        taskView.setTitle(task.getTitle());
+        taskView.setSender(UserBasicView.generate(task.getSender()));
+        taskView.setSenderGroup(GroupBasicView.generate(task.getSenderGroup()));
+        taskView.setRecipientGroup(GroupBasicView.generate(task.getRecipientGroup()));
+        if(task.getRecipients() != null && !task.getRecipients().isEmpty())
+            task.getRecipients().forEach(rp -> taskView.getRecipients().add(UserBasicView.generate(rp)));
+        taskView.setDeadline(task.getDueDate());
+        return taskView;
+    }
+
+    public TMSTask.STATUS getStatus() {
+        return status;
+    }
+
+    public void setStatus(TMSTask.STATUS status) {
+        this.status = status;
+    }
 
     public long getId() {
         return id;
@@ -34,12 +57,12 @@ public class TaskView {
         this.id = id;
     }
 
-    public String getDescription() {
-        return description;
+    public String getContent() {
+        return content;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setContent(String content) {
+        this.content = content;
     }
 
     public String getTitle() {

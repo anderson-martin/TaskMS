@@ -12,7 +12,7 @@ public class UserView {
     private long id;
     private User.STATUS status;
     private String userName;
-    private String firstname;
+    private String firstName;
     private String lastName;
     private ContactDetail contactDetails;
     private Set<GroupView> groups;
@@ -22,7 +22,7 @@ public class UserView {
         setId(id);
         setStatus(status);
         setUserName(userName);
-        setFirstname(firstName);
+        setFirstName(firstName);
         setLastName(lastName);
     }
 
@@ -53,12 +53,12 @@ public class UserView {
         this.userName = userName;
     }
 
-    public String getFirstname() {
-        return firstname;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
     public String getLastName() {

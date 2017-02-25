@@ -65,12 +65,6 @@ public class GroupView {
         return result;
     }
 
-
-
-
-
-
-
     public GroupBasicView getManagerGroup() {
         return managerGroup;
     }
