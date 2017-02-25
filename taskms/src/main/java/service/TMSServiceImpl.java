@@ -18,6 +18,7 @@ import service.exchange.userGroup.*;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.NotAuthorizedException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -84,7 +85,7 @@ public class TMSServiceImpl implements TMSService {
         try {
             status = userDAO.getUserStatus(Long.parseLong(key.getKey()));
         } catch (Exception ex) {
-            throw new ForbiddenException("not hr user");
+            throw new NotAuthorizedException("not hr user");
         }
         if (status == null || status != User.STATUS.HR_MANAGER) {
             return false;
@@ -94,7 +95,7 @@ public class TMSServiceImpl implements TMSService {
 
     @Override
     public List<UserBasicView> getAllUsers(Credential key) {
-        if (!isHRmanager(key)) throw new ForbiddenException("Not a HR Manager");
+        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
         return new ArrayList<>(userDAO.getUsers(UserBasicView.class));
     }
 
@@ -110,7 +111,7 @@ public class TMSServiceImpl implements TMSService {
 
     @Override
     public UserBasicView registerUser(Credential key, UserRegister userRegister) {
-        if (!isHRmanager(key)) throw new ForbiddenException("Not a HR Manager");
+        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
 
         User user = fromRegister(userRegister);
 
@@ -127,7 +128,7 @@ public class TMSServiceImpl implements TMSService {
 
     @Override
     public DeactivationEffect deactivateUser(Credential key, Long userId) {
-        if (!isHRmanager(key)) throw new ForbiddenException("Not a HR Manager");
+        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
         if (!userDAO.isRegisteredUser(userId)) throw new BadRequestException("Invalid User Id");
 
         User user = userDAO.getUser(userId);
@@ -176,7 +177,7 @@ public class TMSServiceImpl implements TMSService {
     @Override
     public UserView updateUser(Credential key, long userId, UserUpdater userUpdater) {
         // checking userUpdaterValidity
-        if (!isHRmanager(key)) throw new ForbiddenException("Not a HR Manager");
+        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
         if (!userDAO.isRegisteredUser(userId)) throw new BadRequestException("Invalid User Id");
         if(userUpdater.getFirstName() == null || userUpdater.getLastName() == null || userUpdater.getStatus() == null)
             throw new BadRequestException("Cannot update invalid information!");
@@ -208,20 +209,20 @@ public class TMSServiceImpl implements TMSService {
 
     @Override
     public UserView getUserInfo(Credential key, long userId) {
-        if (!isHRmanager(key)) throw new ForbiddenException("Not a HR Manager");
+        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
         if (!userDAO.isRegisteredUser(userId)) throw new BadRequestException("Invalid User Id");
         return generateUserView(userId);
     }
 
     @Override
     public List<GroupBasicView> getAllGroups(Credential key) {
-        if (!isHRmanager(key)) throw new ForbiddenException("Not a HR Manager");
+        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
         return new ArrayList<>(gruopDAO.getGroups(GroupBasicView.class));
     }
 
     @Override
     public GroupBasicView registerGroup(Credential key, GroupRegister groupRegister) {
-        if (!isHRmanager(key)) throw new ForbiddenException("Not a HR Manager");
+        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
         HierarchyGroup toBeRegistered = fromRegister(groupRegister);
         try {
             gruopDAO.registerGroup(toBeRegistered);
@@ -237,7 +238,7 @@ public class TMSServiceImpl implements TMSService {
     // problem: this is not atomic amount of work :((
     @Override
     public DeactivationEffect deactivateGroup(Credential key, Long groupId) {
-        if (!isHRmanager(key)) throw new ForbiddenException("Not a HR Manager");
+        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
         if (!gruopDAO.isRegisteredGroup(groupId)) throw new BadRequestException("invalid group id");
 
         DeactivationEffect deef = new DeactivationEffect();
@@ -267,7 +268,7 @@ public class TMSServiceImpl implements TMSService {
 
     @Override
     public GroupView updateGroup(Credential key, long groupId, GroupUpdater gu) {
-        if (!isHRmanager(key)) throw new ForbiddenException("Not a HR Manager");
+        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
         if (!gruopDAO.isRegisteredGroup(groupId)) throw new BadRequestException("invalid group id");
         // checking groupUpdater validity
         if(gu.getSubordinateGroups() != null && !gu.getSubordinateGroups().isEmpty()) {
@@ -316,7 +317,7 @@ public class TMSServiceImpl implements TMSService {
 
     @Override
     public GroupView getGroupInfo(Credential key, long groupId) {
-        if (!isHRmanager(key)) throw new ForbiddenException("Not a HR Manager");
+        if (!isHRmanager(key)) throw new NotAuthorizedException("Not a HR Manager");
         if (!gruopDAO.isRegisteredGroup(groupId)) throw new BadRequestException("invalid group id");
         return generateGroupView(groupId);
     }
