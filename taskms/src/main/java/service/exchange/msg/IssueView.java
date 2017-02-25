@@ -21,6 +21,7 @@ public class IssueView {
 
     public static IssueView generate(TMSIssue issue) {
         IssueView issueView = new IssueView();
+
         issueView.setId(issue.getId());
         issueView.setTitle(issue.getTitle());
         issueView.setDescription(issue.getContent());

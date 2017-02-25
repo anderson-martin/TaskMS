@@ -2,6 +2,7 @@ package service;
 
 import objectModels.basicViews.GroupBasicView;
 import objectModels.basicViews.UserBasicView;
+import objectModels.msg.TMSIssue;
 import objectModels.msg.TMSTask;
 import objectModels.userGroup.ContactDetail;
 import objectModels.userGroup.HierarchyGroup;
@@ -467,6 +468,7 @@ public class TMSServiceImpl implements TMSService {
 
         task.setStatus(updater.getStatus());
         task.setContent(updater.getDescription().trim());
+        // only sender can update dueDate and Recipients
         if(isSender) {
             task.setDueDate(updater.getDeadline());
             task.setRecipients(new HashSet<>());
@@ -484,26 +486,124 @@ public class TMSServiceImpl implements TMSService {
 
     @Override
     public List<IssueView> getIssues(Credential key) {
-        return null;
+        validateNonClosedUser(key);
+        // after validation this operation is safe
+        long userId = Long.parseLong(key.getKey());
+
+        List<IssueView> issues = new ArrayList<>();
+        // add add issue sent by user
+        issues.addAll(issueDAO.getUserSentIssues(userId)
+                .stream().map(IssueView::generate).collect(Collectors.toList()));
+        // add issues that group this user belongs to received
+        userDAO.getGroupsForUser(userId, Long.class).forEach( groupId -> {
+            List<IssueView> issuesReceivedByGroup = issueDAO.getGroupReceivedIssues(groupId).stream()
+                    .map(IssueView::generate).collect(Collectors.toList());
+            issues.addAll(issuesReceivedByGroup);
+        });
+
+        return issues;
     }
 
+    boolean validateIssueCreator(long senderId, IssueCreator ic) {
+        if(ic.getTitle() == null || ic.getTitle().trim().isEmpty()) return false;
+        if(ic.getDescription() == null || ic.getDescription().trim().isEmpty()) return false;
+        if(ic.getSenderGroup() == 0) return false;
+        if(ic.getRecipientGroup() == 0) return false;
+        // user must belong to sender group
+        if(!userDAO.getGroupsForUser(senderId, Long.class).contains(ic.getSenderGroup())) return false;
+        // recipientGroup is the manager group of senderGroup
+        Long managerGr = gruopDAO.getManagerGroup(Long.class, ic.getSenderGroup());
+        if(managerGr == null) return false; // case there is no manager group of sender group
+        if( managerGr != ic.getRecipientGroup()) return false;
+        return true;
+    }
     @Override
     public IssueView createIssue(Credential key, IssueCreator issueCreator) {
-        return null;
+        validateNonClosedUser(key);
+        // after validation this operation is safe
+        long senderId = Long.parseLong(key.getKey());
+        if(!validateIssueCreator(senderId, issueCreator)) throw new BadRequestException("invalid task creator");
+
+        // now issue can be created
+        TMSIssue issue = new TMSIssue();
+        // > sender
+        User sender = new User(); sender.setId(senderId);
+        issue.setSender(sender);
+        // > senderGroup
+        HierarchyGroup senderGroup = new HierarchyGroup();
+        senderGroup.setId(issueCreator.getSenderGroup());
+        issue.setSenderGroup(senderGroup);
+        // > recipientGroup
+        HierarchyGroup recipientGroup = new HierarchyGroup();
+        recipientGroup.setId(issueCreator.getRecipientGroup());
+        issue.setRecipientGroup(recipientGroup);
+        // > others
+        issue.setContent(issueCreator.getDescription().trim());
+        issue.setTitle(issueCreator.getTitle().trim());
+        issue.setSentDate(new Date());
+
+        issueDAO.createIssue(issue);
+        return IssueView.generate(issueDAO.getIssue(issue.getId()));
+    }
+
+    private boolean isUserAssociatedWithIssue(long userId, TMSIssue issue) {
+        boolean isSender = issue.getSender().getId() == userId;
+        boolean isUserFromRecipientGroup = userDAO.doesGroupContains(issue.getRecipientGroup().getId(), userId);
+        return isSender || isUserFromRecipientGroup;
     }
 
     @Override
     public IssueView deleteIssue(Credential key, long issueId) {
-        return null;
+        validateNonClosedUser(key);
+        // after validation this operation is safe
+        long userId = Long.parseLong(key.getKey());
+
+        // user is authorized to delete?
+        TMSIssue issue = issueDAO.getIssue(issueId);
+        if(issue == null) throw new BadRequestException("Invalid issueId");
+
+        if(!isUserAssociatedWithIssue(userId, issue)) throw new ForbiddenException("Not authorized to delete issue");
+
+        issueDAO.deleteIssue(issueId);
+        return IssueView.generate(issue);
     }
 
     @Override
     public IssueView getIssue(Credential key, long issueId) {
-        return null;
+        validateNonClosedUser(key);
+        // after validation this operation is safe
+        long userId = Long.parseLong(key.getKey());
+
+        // user is authorized to get issue?
+        TMSIssue issue = issueDAO.getIssue(issueId);
+        if(issue == null) throw new BadRequestException("Invalid issueId");
+        if(!isUserAssociatedWithIssue(userId, issue)) throw new ForbiddenException("Not authorized to see this issue");
+
+        return IssueView.generate(issue);
+    }
+
+    private boolean validateIssueUpdater(IssueUpdater iu ){
+        if(iu.getDescription() == null || iu.getDescription().trim().isEmpty()) return false;
+        if(iu.getStatus() == null) return false;
+        return true;
     }
 
     @Override
     public IssueView updateIssue(Credential key, long issueId, IssueUpdater updater) {
-        return null;
+        validateNonClosedUser(key);
+        // after validation this operation is safe
+        long userId = Long.parseLong(key.getKey());
+
+        // user is authorized to get issue?
+        TMSIssue issue = issueDAO.getIssue(issueId);
+        if(issue == null) throw new BadRequestException("Invalid issueId");
+        if(!validateIssueUpdater(updater)) throw new BadRequestException("Invalid updater object");
+        if(!isUserAssociatedWithIssue(userId, issue)) throw new ForbiddenException("Not authorized to see this issue");
+
+        // now do the update
+        issue.setContent(updater.getDescription().trim());
+        issue.setStatus(updater.getStatus());
+        issueDAO.updateIssue(issue);
+        return IssueView.generate(issue);
     }
 }

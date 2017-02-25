@@ -7,7 +7,6 @@ public class IssueCreator {
     private String description;
     private String title;
 
-    private long sender;
     private long senderGroup;
     private long recipientGroup;
 
@@ -27,14 +26,6 @@ public class IssueCreator {
 
     public void setTitle(String title) {
         this.title = title;
-    }
-
-    public long getSender() {
-        return sender;
-    }
-
-    public void setSender(long sender) {
-        this.sender = sender;
     }
 
     public long getSenderGroup() {

@@ -275,12 +275,13 @@ public interface TMSService {
 
     /**
      * Delete an issued identified by given id.
-     * Authorized: user who is in the recipient group of the issue
+     * Authorized: user who is in the recipient group of the issue,
+     * or the sender of the issue
      *
      * @param key    Authorization Credential, which uniquely identify an user
-     * @param taskId id of the task to be updated
+     * @param issueId id of the task to be updated
      * @return
-     * @throws javax.ws.rs.BadRequestException    if invalid taskId is given (400)
+     * @throws javax.ws.rs.BadRequestException    if invalid issueId is given (400)
      * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail   (401)
      * @throws javax.ws.rs.ForbiddenException     if the identified user is not authorized to delete identified issue
      */
@@ -292,7 +293,7 @@ public interface TMSService {
      * with association specified in getIssues()
      *
      * @param key    Authorization Credential, which uniquely identify an user
-     * @param taskId Id of the issue to be retrieved
+     * @param issueId Id of the issue to be retrieved
      * @return information related to the task identified by given id
      * @throws javax.ws.rs.BadRequestException    if invalid issueId is given(400)
      * @throws javax.ws.rs.NotAuthorizedException if authorize credential fails (401)
@@ -310,7 +311,7 @@ public interface TMSService {
      * + one of the task recipients
      *
      * @param key     authorize credential, which uniquely identify an user
-     * @param taskId  id of the task to be updated
+     * @param issueId  id of the task to be updated
      * @param updater updater object contain information to be updated
      * @return view of the updated task
      * @throws javax.ws.rs.BadRequestException    if invalid issue id, or invalid updater is given (400)
