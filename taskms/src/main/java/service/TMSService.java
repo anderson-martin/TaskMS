@@ -35,7 +35,8 @@ public interface TMSService {
      * Get the view of user identified by given key
      * @param key key to identify user, which is currently user id
      * @return user view
-     * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail, or user identified is CLOSED (401)
+     * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail, referring to unregistered user (401)
+     * @throws javax.ws.rs.ForbiddenException if user is CLOSED
      */
     UserView authenticate(Credential key);
 
@@ -45,7 +46,8 @@ public interface TMSService {
      *
      * @param key Authorization Credential, which uniquely identify an user
      * @return list of users in basic view
-     * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail (401)
+     * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail, referring to unregistered user(401)
+     * @throws javax.ws.rs.ForbiddenException if user is not a HR MANAGER
      */
     List<UserBasicView> getAllUsers(Credential key);
 
@@ -58,7 +60,8 @@ public interface TMSService {
      * @return basicView of the newly created user
      * @throws javax.ws.rs.BadRequestException    if the user's userName, or firstName, or lastName is null; (400)
      * @throws service.exception.StateConflict    if userName already exists! (409)
-     * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail (401)
+     * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail, referring to unregistered user (401)
+     * @throws javax.ws.rs.ForbiddenException if user is not a HR MANAGER
      */
     UserBasicView registerUser(Credential key, UserRegister userRegister);
 
@@ -66,6 +69,7 @@ public interface TMSService {
      * Deactivate user from the system by
      * + change state of use to inactive
      * + remove this user from all groups (s)he belongs to
+     *
      * Authorized: HR
      *
      * @param key    Authorization Credential, which uniquely identify an user
@@ -73,35 +77,45 @@ public interface TMSService {
      * @return a set of group id referring to the group that is affected by this method,
      * namely group that has this user removed
      * @throws javax.ws.rs.BadRequestException    if user's id is invalid (400)
-     * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail (401)
+     * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail, referring to unregistered user (401)
+     * @throws javax.ws.rs.ForbiddenException if identified user is not a HR MANAGER
      */
     DeactivationEffect deactivateUser(Credential key, Long userId);
 
+
     /**
-     * Update an user identified by given id
-     * Authorized: HR
+     * Update an user identified by given id with an valid groupUpdater object.
+     * // TODO:
+     * An valid group updater object will have:
+     * + valid users: valid user id, referring to non CLOSED user
+     * + valid manager group, and subordinate groups:valid id, referring CLOSED groups
      *
+     * Authorized: TODO:
+     * + HR: update everything, except update user status to CLOSED, use deactivate user instead
+     * + User: update himself on firstName, lastName, and contactDetails
      * @param key         Authorization Credential, which uniquely identify an user
      * @param userUpdater updating object for user
      * @return UserView as the result of the updated user
-     * @throws javax.ws.rs.BadRequestException    if user's id is invalid or there exits invalid group id in groups(400)
-     * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail (401)
+     * @throws javax.ws.rs.BadRequestException    if given invalid groupUpdater(400)
+     * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail, referring to unregistered user (401)
+     * @throws javax.ws.rs.ForbiddenException if identified user is not HR or user himself
      */
     UserView updateUser(Credential key, long userId, UserUpdater userUpdater);
 
     /**
-     * Get information about an user:
+     * Get information about an user.
      * Authorized:
-     * + HR can see all user in the system regardless of status
-     * + An user can see the detail of active user only
+     * + ACTIVE user
+     * + HR user
      *
      * @param key Authorization Credential, which uniquely identify an user
      * @param id  id of an user registered in the system
      * @return UserView
      * @throws javax.ws.rs.BadRequestException    if user's id is invalid (400)
-     * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail (401)
+     * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail, referring to unregistered user (401)
+     * @throws javax.ws.rs.ForbiddenException if identified user is CLOSED
      */
-    UserView getUserInfo(Credential key, long id);
+    UserView getUserInfo(Credential key, long userId);
 
     // GROUP
 
@@ -112,19 +126,25 @@ public interface TMSService {
      * @param key Authorization Credential, which uniquely identify an user
      * @return list of all groups in basic view
      * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail (401)
+     * @throws javax.ws.rs.ForbiddenException if user is not a HR MANAGER
      */
     List<GroupBasicView> getAllGroups(Credential key);
 
     /**
      * Register an group with the system
+     *
+     * A valid group register must have:
+     * + valid, non null name
+     *
      * Authorized: HR
      *
      * @param key           Authorization Credential, which uniquely identify an user
      * @param groupRegister
      * @return basic view of the newly created group
-     * @throws javax.ws.rs.BadRequestException    if group's name is null; (400)
+     * @throws javax.ws.rs.BadRequestException    if given invalid groupRegister (400)
      * @throws service.exception.StateConflict    if group's already exists! (409)
      * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail (401)
+     * @throws javax.ws.rs.ForbiddenException if user is not a HR MANAGER
      */
     GroupBasicView registerGroup(Credential key, GroupRegister groupRegister);
 
@@ -134,41 +154,45 @@ public interface TMSService {
      * + remove all user from this group
      * + remove this group's manager group
      * + remove this group as a manager of its subordinate groups
+     *
      * Authorized: HR
      *
      * @param key     Authorization Credential, which uniquely identify an user
      * @param groupId id of the group to be deactivated
      * @return deactivated group in full view as a result of the deactivation
-     * @throws javax.ws.rs.BadRequestException    if group's id is invalid (400)
+     * @throws javax.ws.rs.BadRequestException    if given invalid groupId (400)
      * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail (401)
+     * @throws javax.ws.rs.ForbiddenException if user is not a HR MANAGER
      */
     DeactivationEffect deactivateGroup(Credential key, Long groupId);
 
     /**
      * Update a group identified by given id
+     *
+     * An valid group updater object must have:
+     * // TODO:
      * Authorized: HR
      *
      * @param key          Authorization Credential, which uniquely identify an user
      * @param groupUpdater updating object for group
      * @return GroupView as the result of the updated user
-     * @throws javax.ws.rs.BadRequestException    if group's id is invalid or
-     *                                            there exists invalid group id in subordinate group id set or
-     *                                            there exists invalid user id in user id set (400)
+     * @throws javax.ws.rs.BadRequestException    if given invalid groupId, or groupUpdater (400)
      * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail (401)
      */
     GroupView updateGroup(Credential key, long groupId, GroupUpdater groupUpdater);
 
     /**
-     * Get information about an user:
+     * Get information about an user.
      * Authorized:
-     * + HR can see detail of all group regardless of the group status
-     * + An user can see the detail of active group only
+     * + HR user
+     * + ACTIVE user
      *
      * @param key     Authorization Credential, which uniquely identify an user
      * @param groupId id of an group to be updated in the system
      * @return GroupView
      * @throws javax.ws.rs.BadRequestException    if user's id is invalid (400)
      * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail (401)
+     * @throws javax.ws.rs.ForbiddenException if identified user is CLOSED
      */
     GroupView getGroupInfo(Credential key, long groupId);
 

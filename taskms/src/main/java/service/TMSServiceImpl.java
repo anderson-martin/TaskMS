@@ -82,8 +82,12 @@ public class TMSServiceImpl implements TMSService {
             throw new NotAuthorizedException("invalid key");
         }
         if (status == null || status != User.STATUS.HR_MANAGER) {
-            throw new NotAuthorizedException("not hr user");
+            throw new NotAuthorizedException("unregistered user");
         }
+        if( status != User.STATUS.HR_MANAGER) {
+            throw new ForbiddenException("NOT A HUMAN RESOURCES MANAGER USER");
+        }
+
     }
 
     private void validateNonClosedUser(Credential key){
@@ -93,8 +97,11 @@ public class TMSServiceImpl implements TMSService {
         } catch (Exception ex) {
             throw new NotAuthorizedException("invalid key");
         }
-        if (status == null || status == User.STATUS.CLOSED) {
-            throw new NotAuthorizedException("user is not registered || a closed user can do nothing");
+        if (status == null) {
+            throw new NotAuthorizedException("unregistered user");
+        }
+        if (status == User.STATUS.CLOSED) {
+            throw new ForbiddenException("CLOSED user");
         }
     }
 
@@ -428,7 +435,7 @@ public class TMSServiceImpl implements TMSService {
     }
 
     private boolean checkIfTaskAssociatedWithUser(TMSTask task, long userId) {
-        // check if the task have user as recipient
+        // check if the task has user as recipient
         boolean isTaskTargetUser = task.getRecipients().stream().map(t -> t.getId()).anyMatch(id -> (long) id == userId);
         // check if the task was sent from a group that this user belong to
         boolean isTaskSentByUserGroup = userDAO.getGroupsForUser(userId, Long.class).contains(task.getSenderGroup());
