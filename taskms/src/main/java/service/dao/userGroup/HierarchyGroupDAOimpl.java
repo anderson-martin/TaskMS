@@ -3,11 +3,18 @@ package service.dao.userGroup;
 import config.JPASessionUtil;
 import objectModels.basicViews.GroupBasicView;
 import objectModels.userGroup.HierarchyGroup;
+import objectModels.userGroup.HierarchyGroup_;
+import objectModels.userGroup.User;
+import objectModels.userGroup.User_;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.util.*;
 
 import static config.JPASessionUtil.rollBack;
@@ -135,6 +142,27 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
             rollBack(session.getTransaction());
             throw new RuntimeException(ex);
 //            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    public HierarchyGroup.STATUS getGroupStatus(long groupId) {
+        EntityManager em = JPASessionUtil.getEntityManager();
+        CriteriaBuilder builder = em.getCriteriaBuilder();
+        CriteriaQuery<HierarchyGroup.STATUS> query = builder.createQuery(HierarchyGroup.STATUS.class);
+        Root<HierarchyGroup> root = query.from(HierarchyGroup.class);
+        query.select(root.get(HierarchyGroup_.status)).where(builder.equal(
+                root.get(HierarchyGroup_.id),
+                builder.parameter(Long.class, "groupId")
+        ));
+        try {
+            return em.createQuery(query).setParameter("groupId", groupId).getSingleResult();
+        } catch (NoResultException ex) {
+            System.out.println("Because no user exist, status is NULL:");
+            return null;
+        } catch (Exception ex) {
+            // strange error, FAIL FAST
+            throw new RuntimeException(ex);
         }
     }
 

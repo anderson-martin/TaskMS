@@ -158,9 +158,17 @@ public class HierarchyGroupDAOimplTest {
         for(HierarchyGroup.STATUS status : HierarchyGroup.STATUS.values()) {
             groupDAO.setGroupStatus(id1, status);
             groupDAO.setGroupStatus(id2, status);
-            assertTrue(groupDAO.getGroup(id1).getStatus() == status);
-            assertTrue(groupDAO.getGroup(id2).getStatus() == status);
+            assertTrue(groupDAO.getGroupStatus(id1) == status);
+            assertTrue(groupDAO.getGroupStatus(id2) == status);
         }
+    }
+
+    @Test
+    void getGroupStatus() {
+        assertNull(groupDAO.getGroupStatus(1));
+        assertNull(groupDAO.getGroupStatus(0));
+        assertNull(groupDAO.getGroupStatus(Long.MAX_VALUE));
+        assertNull(groupDAO.getGroupStatus(Long.MIN_VALUE));
     }
 
     @Test

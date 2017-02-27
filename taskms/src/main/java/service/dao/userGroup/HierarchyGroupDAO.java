@@ -69,6 +69,7 @@ public interface HierarchyGroupDAO {
 
     // UPDATE UTILITIES
     void setGroupStatus(long group_id, HierarchyGroup.STATUS status);
+    HierarchyGroup.STATUS getGroupStatus(long groupId);
     void setManagerGroup(long managerGroup_id, long... subordinate_ids );
 
     /**

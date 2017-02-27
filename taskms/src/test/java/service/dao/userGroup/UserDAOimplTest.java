@@ -192,7 +192,7 @@ public class UserDAOimplTest {
         User user = createUser();
         long user_id = userDAO.registerUser(user);
         long group_id = hierarchyGroupDAO.registerGroup(new HierarchyGroup("hello"));
-        Set<HierarchyGroup> groups = new HashSet<HierarchyGroup>();
+        Set<HierarchyGroup> groups = new HashSet<>();
         groups.add(hierarchyGroupDAO.getGroup(group_id));
         user.setGroups(groups);
         user.setStatus(User.STATUS.HR_MANAGER);
@@ -204,7 +204,11 @@ public class UserDAOimplTest {
         final User newUser = new User("a", "b", "c");
         newUser.setId(user_id);
         newUser.setUserName(userName); // because user name is not updatable
+        // remove this user from all group
+        newUser.setGroups(null);
         userDAO.updateUser(newUser);
+        assertTrue(userDAO.getUser(user_id).getGroups().isEmpty());
+        assertNull(userDAO.getUser(user_id).getContactDetail());
         assertTrue(newUser.equals(userDAO.getUser(user_id)));
         assertTrue(newUser.equals(userDAO.getUser(userName)));
 

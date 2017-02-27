@@ -18,8 +18,8 @@ public class Auth {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public UserView getAuthenticationInfo(@HeaderParam("Authorization") String key) {
-        return TMSServiceImpl.getSingleInstance().authenticate(new TMSService.Credential(key));
+    public UserView getAuthenticationInfo(@HeaderParam("Authorization") String userName) {
+        return TMSServiceImpl.getSingleInstance().authenticate(userName);
     }
 
 }
