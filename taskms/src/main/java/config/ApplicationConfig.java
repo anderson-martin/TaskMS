@@ -4,7 +4,10 @@ package config;
  * Created by rohan on 2/8/17.
  */
 import restResources.*;
-import restResources.exceptionMapping.StateConflictionMapper;
+import restResources.exceptionMapping.BadRequestExceptionMapper;
+import restResources.exceptionMapping.ForbiddenExceptionMapper;
+import restResources.exceptionMapping.NotAuthorizedExceptionMapper;
+import restResources.exceptionMapping.StateConflictMapper;
 import restResources.test.TestRest;
 
 import java.util.Set;
@@ -31,10 +34,17 @@ public class ApplicationConfig extends Application {
      * If required, comment out calling this method in getClasses().
      */
     private void addRestResourceClasses(Set<Class<?>> resources) {
+        // exception:
+        resources.add(StateConflictMapper.class);
+        resources.add(ForbiddenExceptionMapper.class);
+        resources.add(NotAuthorizedExceptionMapper.class);
+        resources.add(BadRequestExceptionMapper.class);
+
+
         resources.add(TestRest.class);
-        resources.add(StateConflictionMapper.class);
-        resources.add(GroupResources.class);
+
         resources.add(Auth.class);
+        resources.add(GroupResources.class);
         resources.add(UserResources.class);
         resources.add(TaskResources.class);
         resources.add(IssueResources.class);

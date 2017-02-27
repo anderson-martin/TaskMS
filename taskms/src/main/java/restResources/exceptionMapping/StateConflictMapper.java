@@ -4,11 +4,10 @@ import service.exception.StateConflict;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
 
-/**
- * Created by rohan on 2/23/17.
- */
-public class StateConflictionMapper implements ExceptionMapper<StateConflict> {
+@Provider
+public class StateConflictMapper implements ExceptionMapper<StateConflict> {
     @Override
     public Response toResponse(StateConflict exception)
     {
