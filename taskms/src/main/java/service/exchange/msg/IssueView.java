@@ -4,6 +4,8 @@ import objectModels.basicViews.GroupBasicView;
 import objectModels.basicViews.UserBasicView;
 import objectModels.msg.TMSIssue;
 
+import java.util.Date;
+
 /**
  * Created by rohan on 2/25/17.
  */
@@ -12,6 +14,7 @@ public class IssueView {
     private String title;
     private String description;
     private TMSIssue.STATUS status;
+    private Date sentDate;
 
     private UserBasicView sender;
     private GroupBasicView senderGroup;
@@ -26,11 +29,20 @@ public class IssueView {
         issueView.setTitle(issue.getTitle());
         issueView.setDescription(issue.getContent());
         issueView.setStatus(issue.getStatus());
+        issueView.setSentDate(issue.getSentDate());
 
         issueView.setSender(UserBasicView.generate(issue.getSender()));
         issueView.setSenderGroup(GroupBasicView.generate(issue.getSenderGroup()));
         issueView.setRecipientGroup(GroupBasicView.generate(issue.getRecipientGroup()));
         return issueView;
+    }
+
+    public Date getSentDate() {
+        return sentDate;
+    }
+
+    public void setSentDate(Date sentDate) {
+        this.sentDate = sentDate;
     }
 
     public long getId() {

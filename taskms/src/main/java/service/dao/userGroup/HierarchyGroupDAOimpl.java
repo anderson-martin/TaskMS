@@ -181,6 +181,7 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
 
     @Override
     public void setManagerGroup(long managerGroup_id, long... subordinate_ids) {
+        if(subordinate_ids.length == 0) return;
         Session session = JPASessionUtil.getCurrentSession();
         try {
             session.beginTransaction();
@@ -198,12 +199,14 @@ public class HierarchyGroupDAOimpl implements HierarchyGroupDAO {
 
     @Override
     public void unsetManagerGroup(long... subordinate_ids) {
+        if(subordinate_ids.length == 0) return;
+        List<Long> ids = converts(subordinate_ids);
         Session session = JPASessionUtil.getCurrentSession();
         try {
             session.beginTransaction();
             Query query = session.createQuery("update HierarchyGroup hg set hg.managerGroup = :val where hg.id IN :ids");
             query.setParameter("val", null);
-            query.setParameter("ids", converts(subordinate_ids));
+            query.setParameter("ids", ids);
             query.executeUpdate();
             session.getTransaction().commit();
         } catch (Exception ex) {

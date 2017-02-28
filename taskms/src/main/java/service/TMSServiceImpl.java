@@ -40,23 +40,21 @@ public class TMSServiceImpl implements TMSService {
     public static TMSService getSingleInstance() {
         return singleInstance;
     }
-
-    private TMSServiceImpl() {
-        // initialize, create several group
+    private void initilize() {
         User hr = new User("hr", "hr", "hr");
         hr.setStatus(User.STATUS.HR_MANAGER);
         hr.setContactDetail(new ContactDetail("lintukorventie", "02660", "ESPOO", "dang@dang.com", "0465672648"));
         userDAO.registerUser(hr);
 
-        User manager = new User("manager", "dang", "nguyen");
+        User manager = new User("manager", "manager", "manager");
         manager.setContactDetail(new ContactDetail("metsalinnunretti", "02660", "ESPOO", "innolight@gmail.com", "0465672648"));
         userDAO.registerUser(manager);
 
-        User cashierLead = new User("cashierLead", "arseni", "kurilov");
+        User cashierLead = new User("cashierLead", "cashierLead", "cashierLead");
         cashierLead.setContactDetail(new ContactDetail("vittukatu", "04230", "ESPOO", "arseni@th.com", "0418736671"));
         userDAO.registerUser(cashierLead);
 
-        User cashier = new User("cashier", "thanh", "ng");
+        User cashier = new User("cashier", "cashier", "cashier");
         cashier.setContactDetail(new ContactDetail("turkismiehentie", "01330", "HELSINKI", "thanh@th.com", "0422752736"));
         userDAO.registerUser(cashier);
 
@@ -73,6 +71,10 @@ public class TMSServiceImpl implements TMSService {
         userDAO.addUserToGroup(cashierG.getId(), cashier.getId());
         userDAO.addUserToGroup(cashierLeadG.getId(), cashierLead.getId());
         userDAO.addUserToGroup(managerG.getId(), manager.getId());
+    }
+    private TMSServiceImpl() {
+        // initialize, create several group
+//        initilize();
     }
 
     private void validateHRManager(Credential key) {
@@ -273,7 +275,7 @@ public class TMSServiceImpl implements TMSService {
         userUpdated.setLastName(userUpdater.getLastName());
         userUpdated.setContactDetail(userUpdater.getContactDetails());
 
-        userDAO.registerUser(userUpdated);
+        userDAO.updateUser(userUpdated);
 
         return generateUserView(userUpdated.getId());
     }
@@ -371,7 +373,7 @@ public class TMSServiceImpl implements TMSService {
                 throw new BadRequestException("Invalid updater: CLOSED manager group found");
         }
     }
-
+    // bugs
     @Override
     public GroupView updateGroup(Credential key, long groupId, GroupUpdater gu) {
         validateHRManager(key);
@@ -380,12 +382,9 @@ public class TMSServiceImpl implements TMSService {
         // update
         // > update subordinates
         HierarchyGroup group = gruopDAO.getGroup(groupId);
-        group.setSubordinateGroups(new HashSet<>());
-        gu.getSubordinateGroups().forEach(groupIdd -> {
-            HierarchyGroup sub = new HierarchyGroup();
-            sub.setId(groupIdd);
-            group.getSubordinateGroups().add(sub);
-        });
+        if(!gu.getSubordinateGroups().isEmpty()) {
+            gruopDAO.setManagerGroup(group.getId(), gu.getSubordinateGroups().stream().mapToLong(Long::longValue).toArray());
+        }
         // update manager
         if (gu.getManagerGroup() == 0) {
             group.setManagerGroup(null);
@@ -539,7 +538,7 @@ public class TMSServiceImpl implements TMSService {
         if (taskUpdater.getRecipients() == null || taskUpdater.getRecipients().isEmpty()) basicCheck = false;
         if(!basicCheck) throw new BadRequestException("Invalid taskUpdater");
         if (!userDAO.doesGroupContains(task.getRecipientGroup().getId(), taskUpdater.getRecipients().stream().mapToLong(Long::longValue).toArray()))
-            throw new BadRequestException("Invalid taskUpdater: recipients are not from recipient group");
+            throw new BadRequestException("Invalid taskUpdater: exists invalid recipient, either non registered, or closed, or not from recipient group");
     }
 
     @Override
@@ -609,7 +608,7 @@ public class TMSServiceImpl implements TMSService {
 
         // user must belong to sender group
         if (!userDAO.doesGroupContains(ic.getSenderGroup(), senderId))
-            throw new BadRequestException("Invalid IssueCreator: user is not from sender group");
+            throw new BadRequestException("Invalid IssueCreator: issue creator is not from sender group");
         // recipientGroup is the manager group of senderGroup
         Long managerGroupId = gruopDAO.getManagerGroup(Long.class, ic.getSenderGroup());
         if (managerGroupId == null)
