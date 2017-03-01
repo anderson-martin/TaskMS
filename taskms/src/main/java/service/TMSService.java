@@ -51,7 +51,7 @@ public interface TMSService {
      * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail, referring to unregistered user(401)
      * @throws javax.ws.rs.ForbiddenException     if user is not a HR MANAGER
      */
-    List<UserBasicView> getAllUsers(Credential key);
+    Set<UserBasicView> getAllUsers(Credential key);
 
     /**
      * Register an user with the system with valid userRegister
@@ -136,7 +136,7 @@ public interface TMSService {
      * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail (401)
      * @throws javax.ws.rs.ForbiddenException     if user is not a HR MANAGER
      */
-    List<GroupBasicView> getAllGroups(Credential key);
+    Set<GroupBasicView> getAllGroups(Credential key);
 
     /**
      * Register an group with the system
@@ -221,7 +221,7 @@ public interface TMSService {
      * @return tasks associated with an user
      * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail (403)
      */
-    List<TaskView> getTasks(Credential key);
+    Set<TaskView> getTasks(Credential key);
 
     /**
      * Create a task with
@@ -299,7 +299,7 @@ public interface TMSService {
      * @return issues associated with an user
      * @throws javax.ws.rs.NotAuthorizedException if authorize credential fail (403)
      */
-    List<IssueView> getIssues(Credential key);
+    Set<IssueView> getIssues(Credential key);
 
     /**
      * Create an issue with

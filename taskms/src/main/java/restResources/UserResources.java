@@ -12,6 +12,7 @@ import service.exchange.userGroup.UserView;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by rohan on 2/18/17.
@@ -22,7 +23,7 @@ public class UserResources {
     private static final TMSService service = TMSServiceImpl.getSingleInstance();
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<UserBasicView> getAllUsers(@HeaderParam("Authorization") String key) {
+    public Set<UserBasicView> getAllUsers(@HeaderParam("Authorization") String key) {
         return service.getAllUsers(new Credential(key));
     }
 //    {

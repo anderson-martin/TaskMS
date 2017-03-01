@@ -125,4 +125,19 @@ public class TaskView {
     public void setDeadline(Date deadline) {
         this.deadline = deadline;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TaskView taskView = (TaskView) o;
+
+        return id == taskView.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (id ^ (id >>> 32));
+    }
 }

@@ -132,9 +132,9 @@ public class TMSServiceImpl implements TMSService {
     }
 
     @Override
-    public List<UserBasicView> getAllUsers(Credential key) {
+    public Set<UserBasicView> getAllUsers(Credential key) {
         validateHRManager(key);
-        return new ArrayList<>(userDAO.getUsers(UserBasicView.class));
+        return userDAO.getUsers(UserBasicView.class);
     }
 
     private User makeUserFromRegister(UserRegister userRegister) {
@@ -288,9 +288,9 @@ public class TMSServiceImpl implements TMSService {
     }
 
     @Override
-    public List<GroupBasicView> getAllGroups(Credential key) {
+    public Set<GroupBasicView> getAllGroups(Credential key) {
         validateHRManager(key);
-        return new ArrayList<>(gruopDAO.getGroups(GroupBasicView.class));
+        return gruopDAO.getGroups(GroupBasicView.class);
     }
 
     private static boolean validateGroupRegister(GroupRegister gr) {
@@ -410,12 +410,12 @@ public class TMSServiceImpl implements TMSService {
     }
 
     @Override
-    public List<TaskView> getTasks(Credential key) {
+    public Set<TaskView> getTasks(Credential key) {
         validateNonClosedUser(key);
         // after validation this operation is safe
         long userId = Long.parseLong(key.getKey());
 
-        List<TaskView> tasks = new ArrayList<>();
+        Set<TaskView> tasks = new HashSet<>();
         userDAO.getGroupsForUser(userId, Long.class).forEach(groupId ->
             tasks.addAll(taskDAO.getGroupSentTasks(groupId).stream()
                     .map(TaskView::generate).collect(Collectors.toList())));
@@ -576,12 +576,12 @@ public class TMSServiceImpl implements TMSService {
     }
 
     @Override
-    public List<IssueView> getIssues(Credential key) {
+    public Set<IssueView> getIssues(Credential key) {
         validateNonClosedUser(key);
         // after validation this operation is safe
         long userId = Long.parseLong(key.getKey());
 
-        List<IssueView> issues = new ArrayList<>();
+        Set<IssueView> issues = new HashSet<>();
         // add issue sent by user
         issues.addAll(issueDAO.getUserSentIssues(userId)
                 .stream().map(IssueView::generate).collect(Collectors.toList()));
