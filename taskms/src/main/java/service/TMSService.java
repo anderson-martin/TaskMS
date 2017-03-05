@@ -182,6 +182,7 @@ public interface TMSService {
      * + subordinateGroup: valid group id, must not be CLOSED
      * + managerGroup: valid group id, must not be CLOSED
      * + managerGroup: if set to 0, unset manager group, freeing this group from any manager
+     * + a group must not set itself as manager group or subordinates group
      * <p>
      * Authorized: HR
      *

@@ -345,13 +345,14 @@ public class TMSServiceImpl implements TMSService {
         return array;
     }
 
-    private static void validateGroupUpdater(GroupUpdater gu) {
+    private static void validateGroupUpdater(long groupId, GroupUpdater gu) {
         if (gu.getName() == null || gu.getName().trim().isEmpty())
             throw new BadRequestException("Invalid updater: name for group");
         if (gu.getUsers() == null || gu.getSubordinateGroups() == null)
             throw new BadRequestException("Invalid updater: users, subordinateGroup must not be null");
         // check subordinates
         gu.getSubordinateGroups().forEach(groupIdd -> {
+            if(groupId == groupIdd) throw new BadRequestException("Invalid updater: cannot set group itself as subordinate group");
             HierarchyGroup.STATUS groupStatus = groupDAO.getGroupStatus(groupIdd);
             if (groupStatus == null)
                 throw new BadRequestException("Invalid updater: non registered subordinate group found");
@@ -367,6 +368,7 @@ public class TMSServiceImpl implements TMSService {
         });
         // check manager
         if (gu.getManagerGroup() != 0) {
+            if(gu.getManagerGroup() == groupId) throw new BadRequestException("Invalid updater: cannot set group itself as manager group");
             HierarchyGroup.STATUS managerStatus = groupDAO.getGroupStatus(gu.getManagerGroup());
             if (managerStatus == null) throw new BadRequestException("Invalid updater: non registered manager found");
             if (managerStatus == HierarchyGroup.STATUS.CLOSED)
@@ -378,7 +380,7 @@ public class TMSServiceImpl implements TMSService {
     public GroupView updateGroup(Credential key, long groupId, GroupUpdater gu) {
         validateHRManager(key);
         if (!groupDAO.isRegisteredGroup(groupId)) throw new BadRequestException("invalid group id");
-        validateGroupUpdater(gu);
+        validateGroupUpdater(groupId, gu);
         // update
         // > update subordinates
         HierarchyGroup group = groupDAO.getGroup(groupId);
