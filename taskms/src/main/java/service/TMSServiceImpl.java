@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  */
 public class TMSServiceImpl implements TMSService {
     // Utilities
-    private static final HierarchyGroupDAO gruopDAO = HierarchyGroupDAOimpl.getSingleInstance();
+    private static final HierarchyGroupDAO groupDAO = HierarchyGroupDAOimpl.getSingleInstance();
     private static final UserDAO userDAO = UserDAOimpl.getSingleInstance();
     private static final TMSTaskDAO taskDAO = TMSTaskDAOImpl.getSingleInstance();
     private static final TMSIssueDAO issueDAO = TMSIssueDAOimpl.getSingleInstance();
@@ -64,9 +64,9 @@ public class TMSServiceImpl implements TMSService {
         HierarchyGroup cashierG = new HierarchyGroup("cashier");
         cashierLeadG.setManagerGroup(managerG);
         cashierG.setManagerGroup(cashierLeadG);
-        gruopDAO.registerGroup(managerG);
-        gruopDAO.registerGroup(cashierLeadG);
-        gruopDAO.registerGroup(cashierG);
+        groupDAO.registerGroup(managerG);
+        groupDAO.registerGroup(cashierLeadG);
+        groupDAO.registerGroup(cashierG);
 
         userDAO.addUserToGroup(cashierG.getId(), cashier.getId());
         userDAO.addUserToGroup(cashierLeadG.getId(), cashierLead.getId());
@@ -140,7 +140,7 @@ public class TMSServiceImpl implements TMSService {
     private User makeUserFromRegister(UserRegister userRegister) {
         User user = new User(userRegister.getUserName().trim(), userRegister.getFirstName().trim(), userRegister.getLastName().trim());
         user.setStatus(userRegister.getStatus());
-        user.setContactDetail(userRegister.getContactDetail());
+        user.setContactDetail(userRegister.getContactDetails());
         return user;
     }
 
@@ -223,7 +223,7 @@ public class TMSServiceImpl implements TMSService {
 
     /* For valid id*/
     private GroupView generateGroupView(long groupId) {
-        return generateGroupView(gruopDAO.getGroup(groupId));
+        return generateGroupView(groupDAO.getGroup(groupId));
     }
 
     private void validateUserUpdater(UserUpdater ud) {
@@ -238,7 +238,7 @@ public class TMSServiceImpl implements TMSService {
         // check group
         if (ud.getGroups() == null) throw new BadRequestException("Invalid updater: `groups` must not be null");
         ud.getGroups().forEach(groupId -> {
-            HierarchyGroup.STATUS groupStatus = gruopDAO.getGroupStatus(groupId);
+            HierarchyGroup.STATUS groupStatus = groupDAO.getGroupStatus(groupId);
             if (groupStatus == null)
                 throw new BadRequestException("Invalid updater: non registered group found");
             if (groupStatus == HierarchyGroup.STATUS.CLOSED)
@@ -290,7 +290,7 @@ public class TMSServiceImpl implements TMSService {
     @Override
     public Set<GroupBasicView> getAllGroups(Credential key) {
         validateHRManager(key);
-        return gruopDAO.getGroups(GroupBasicView.class);
+        return groupDAO.getGroups(GroupBasicView.class);
     }
 
     private static boolean validateGroupRegister(GroupRegister gr) {
@@ -304,9 +304,9 @@ public class TMSServiceImpl implements TMSService {
         if (!validateGroupRegister(groupRegister)) throw new BadRequestException("Invalid groupRegister");
         HierarchyGroup toBeRegistered = makeGroupFromRegister(groupRegister);
         try {
-            gruopDAO.registerGroup(toBeRegistered);
+            groupDAO.registerGroup(toBeRegistered);
         } catch (RuntimeException ex) {
-            if (gruopDAO.isRegisteredGroup(toBeRegistered.getName())) {
+            if (groupDAO.isRegisteredGroup(toBeRegistered.getName())) {
                 throw new StateConflict("group name already exists");
             } else throw new BadRequestException("SEVERE: Unknown error");
         }
@@ -317,20 +317,20 @@ public class TMSServiceImpl implements TMSService {
     @Override
     public DeactivationEffect deactivateGroup(Credential key, Long groupId) {
         validateHRManager(key);
-        if (!gruopDAO.isRegisteredGroup(groupId)) throw new BadRequestException("invalid group id");
+        if (!groupDAO.isRegisteredGroup(groupId)) throw new BadRequestException("invalid group id");
 
         DeactivationEffect deef = new DeactivationEffect();
         deef.setAffectedUsers(userDAO.getUsersInGroup(groupId, Long.class));
-        Set<Long> subordinateIds = gruopDAO.getSubordinateGroups(Long.class, groupId);
+        Set<Long> subordinateIds = groupDAO.getSubordinateGroups(Long.class, groupId);
         deef.setAffectedGroups(subordinateIds);
 
-        Long managerId = gruopDAO.getManagerGroup(Long.class, groupId);
+        Long managerId = groupDAO.getManagerGroup(Long.class, groupId);
         if (managerId != null) {
             deef.getAffectedGroups().add(managerId);
-            gruopDAO.unsetManagerGroup(groupId); // free this group from its manager
+            groupDAO.unsetManagerGroup(groupId); // free this group from its manager
         }
-        gruopDAO.unsetManagerGroup(convert(subordinateIds));
-        gruopDAO.setGroupStatus(groupId, HierarchyGroup.STATUS.CLOSED);
+        groupDAO.unsetManagerGroup(convert(subordinateIds));
+        groupDAO.setGroupStatus(groupId, HierarchyGroup.STATUS.CLOSED);
         userDAO.removeAllUsersFromGroup(groupId);
 
         return deef;
@@ -352,7 +352,7 @@ public class TMSServiceImpl implements TMSService {
             throw new BadRequestException("Invalid updater: users, subordinateGroup must not be null");
         // check subordinates
         gu.getSubordinateGroups().forEach(groupIdd -> {
-            HierarchyGroup.STATUS groupStatus = gruopDAO.getGroupStatus(groupIdd);
+            HierarchyGroup.STATUS groupStatus = groupDAO.getGroupStatus(groupIdd);
             if (groupStatus == null)
                 throw new BadRequestException("Invalid updater: non registered subordinate group found");
             if (groupStatus == HierarchyGroup.STATUS.CLOSED)
@@ -367,7 +367,7 @@ public class TMSServiceImpl implements TMSService {
         });
         // check manager
         if (gu.getManagerGroup() != 0) {
-            HierarchyGroup.STATUS managerStatus = gruopDAO.getGroupStatus(gu.getManagerGroup());
+            HierarchyGroup.STATUS managerStatus = groupDAO.getGroupStatus(gu.getManagerGroup());
             if (managerStatus == null) throw new BadRequestException("Invalid updater: non registered manager found");
             if (managerStatus == HierarchyGroup.STATUS.CLOSED)
                 throw new BadRequestException("Invalid updater: CLOSED manager group found");
@@ -377,13 +377,15 @@ public class TMSServiceImpl implements TMSService {
     @Override
     public GroupView updateGroup(Credential key, long groupId, GroupUpdater gu) {
         validateHRManager(key);
-        if (!gruopDAO.isRegisteredGroup(groupId)) throw new BadRequestException("invalid group id");
+        if (!groupDAO.isRegisteredGroup(groupId)) throw new BadRequestException("invalid group id");
         validateGroupUpdater(gu);
         // update
         // > update subordinates
-        HierarchyGroup group = gruopDAO.getGroup(groupId);
+        HierarchyGroup group = groupDAO.getGroup(groupId);
+        // first unset manager group for existing subordinate groups
+        group.getSubordinateGroups().forEach(gr -> groupDAO.unsetManagerGroup(gr.getId()));
         if(!gu.getSubordinateGroups().isEmpty()) {
-            gruopDAO.setManagerGroup(group.getId(), gu.getSubordinateGroups().stream().mapToLong(Long::longValue).toArray());
+            groupDAO.setManagerGroup(group.getId(), gu.getSubordinateGroups().stream().mapToLong(Long::longValue).toArray());
         }
         // update manager
         if (gu.getManagerGroup() == 0) {
@@ -394,7 +396,7 @@ public class TMSServiceImpl implements TMSService {
             group.setManagerGroup(manager);
         }
         group.setName(gu.getName().trim());
-        gruopDAO.updateGroup(group);
+        groupDAO.updateGroup(group);
         // update user
         userDAO.removeAllUsersFromGroup(group.getId()); // first remove all user
         gu.getUsers().forEach(userId -> userDAO.addUserToGroup(group.getId(), userId)); // then add user
@@ -405,7 +407,7 @@ public class TMSServiceImpl implements TMSService {
     @Override
     public GroupView getGroupInfo(Credential key, long groupId) {
         validateNonClosedUser(key);
-        if (!gruopDAO.isRegisteredGroup(groupId)) throw new BadRequestException("Invalid groupId");
+        if (!groupDAO.isRegisteredGroup(groupId)) throw new BadRequestException("Invalid groupId");
         return generateGroupView(groupId);
     }
 
@@ -440,9 +442,9 @@ public class TMSServiceImpl implements TMSService {
         if (tc.getDeadline() == null) basicCheck =  false;
         if(!basicCheck) throw new BadRequestException("Invalid taskCreator: all fields must have non null values");
         // if sender group does not contain sender
-        if(!gruopDAO.isRegisteredGroup(tc.getSenderGroup()))
+        if(!groupDAO.isRegisteredGroup(tc.getSenderGroup()))
             throw new BadRequestException("Invalid taskCreator: sender group not registered");
-        if(!gruopDAO.isRegisteredGroup(tc.getRecipientGroup()))
+        if(!groupDAO.isRegisteredGroup(tc.getRecipientGroup()))
             throw new BadRequestException("Invalid taskCreator: sender group not registered");
         if (!userDAO.doesGroupContains(tc.getSenderGroup(), senderId))
             throw new BadRequestException("Invalid taskCreator: senderGroup must contain sender");
@@ -601,16 +603,16 @@ public class TMSServiceImpl implements TMSService {
         if (ic.getDescription() == null || ic.getDescription().trim().isEmpty()) basicCheck =  false;
         if(!basicCheck) throw new BadRequestException("Invalid IssueCreator: bad title or description");
 
-        if(!gruopDAO.isRegisteredGroup(ic.getSenderGroup()))
+        if(!groupDAO.isRegisteredGroup(ic.getSenderGroup()))
             throw new BadRequestException("Invalid IssueCreator: not registered sender group");
-        if(!gruopDAO.isRegisteredGroup(ic.getRecipientGroup()))
+        if(!groupDAO.isRegisteredGroup(ic.getRecipientGroup()))
             throw new BadRequestException("Invalid IssueCreator: not registered recipient group");
 
         // user must belong to sender group
         if (!userDAO.doesGroupContains(ic.getSenderGroup(), senderId))
             throw new BadRequestException("Invalid IssueCreator: issue creator is not from sender group");
         // recipientGroup is the manager group of senderGroup
-        Long managerGroupId = gruopDAO.getManagerGroup(Long.class, ic.getSenderGroup());
+        Long managerGroupId = groupDAO.getManagerGroup(Long.class, ic.getSenderGroup());
         if (managerGroupId == null)
             throw new BadRequestException("Invalid IssueCreator: sender group does not have manager group"); // case there is no manager group of sender group
         if (managerGroupId != ic.getRecipientGroup())

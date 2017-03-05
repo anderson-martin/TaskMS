@@ -1,14 +1,13 @@
 package service.exchange.userGroup;
 
 import objectModels.userGroup.ContactDetail;
-import objectModels.userGroup.HierarchyGroup;
 import objectModels.userGroup.User;
 
 /**
  * Created by rohan on 2/23/17.
  */
 public class UserRegister {
-    private ContactDetail contactDetail;
+    private ContactDetail contactDetails;
     private User.STATUS status;
     private String userName;
     private String firstName;
@@ -21,12 +20,12 @@ public class UserRegister {
         setLastName(lastName);
     }
 
-    public ContactDetail getContactDetail() {
-        return contactDetail;
+    public ContactDetail getContactDetails() {
+        return contactDetails;
     }
 
-    public void setContactDetail(ContactDetail contactDetail) {
-        this.contactDetail = contactDetail;
+    public void setContactDetails(ContactDetail contactDetails) {
+        this.contactDetails = contactDetails;
     }
 
     public User.STATUS getStatus() {
