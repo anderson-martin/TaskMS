@@ -46,31 +46,7 @@ public class TMSServiceImpl implements TMSService {
         hr.setContactDetail(new ContactDetail("lintukorventie", "02660", "ESPOO", "dang@dang.com", "0465672648"));
         userDAO.registerUser(hr);
 
-        User manager = new User("manager", "manager", "manager");
-        manager.setContactDetail(new ContactDetail("metsalinnunretti", "02660", "ESPOO", "innolight@gmail.com", "0465672648"));
-        userDAO.registerUser(manager);
-
-        User cashierLead = new User("cashierLead", "cashierLead", "cashierLead");
-        cashierLead.setContactDetail(new ContactDetail("vittukatu", "04230", "ESPOO", "arseni@th.com", "0418736671"));
-        userDAO.registerUser(cashierLead);
-
-        User cashier = new User("cashier", "cashier", "cashier");
-        cashier.setContactDetail(new ContactDetail("turkismiehentie", "01330", "HELSINKI", "thanh@th.com", "0422752736"));
-        userDAO.registerUser(cashier);
-
-
-        HierarchyGroup managerG = new HierarchyGroup("manager");
-        HierarchyGroup cashierLeadG = new HierarchyGroup("cashier_lead");
-        HierarchyGroup cashierG = new HierarchyGroup("cashier");
-        cashierLeadG.setManagerGroup(managerG);
-        cashierG.setManagerGroup(cashierLeadG);
-        groupDAO.registerGroup(managerG);
-        groupDAO.registerGroup(cashierLeadG);
-        groupDAO.registerGroup(cashierG);
-
-        userDAO.addUserToGroup(cashierG.getId(), cashier.getId());
-        userDAO.addUserToGroup(cashierLeadG.getId(), cashierLead.getId());
-        userDAO.addUserToGroup(managerG.getId(), manager.getId());
+        new PopulateDatabases().populateGroupUsers();
     }
     private TMSServiceImpl() {
         // initialize, create several group
