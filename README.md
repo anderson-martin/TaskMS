@@ -1,6 +1,6 @@
 Import project to Intellij IDEA
 
-1. download IDEA ultimate version
+1 download IDEA ultimate version
 2 download glassfish server: 
 https://drive.google.com/file/d/0B_Kren52OZsCS3g3ajlmV21xMXc/view?usp=sharing
 Why: 
