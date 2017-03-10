@@ -1,0 +1,9 @@
+Util/HibernateUtil.class
+Models/User/User.class
+Models/User/UserGroup.class
+Util/HibernateUtil$1.class
+Resource/GenericResource.class
+Util/StartupListener.class
+Util/HibernateUtil$HibernateStuffHolder.class
+Resource/ApplicationConfig.class
+Models/Task.class
