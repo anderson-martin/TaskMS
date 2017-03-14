@@ -1,10 +1,9 @@
 This is the backend for the TaskManager application. We did this as part of our school project. In Master branch, you can see 
-version that we used for the application. HOowever, I'm developing a parallel verison, which can be found in Martin branch.
-These two verisons are very different from each other, and we are doing this parallel devleopment for personal learning purpose.
+version that we used for the application. However, for extra learning, I'm developing a parallel verison, which can be found in Martin branch. These two verisons are very different from each other.
 
 
 
-Instruction for usin the version location in Master branch:
+## How to use the code in master branch
 
 Import project to Intellij IDEA
 
