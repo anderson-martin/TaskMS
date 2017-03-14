@@ -1,5 +1,5 @@
 This is the backend for the TaskManager application. We did this as part of our school project. In Master branch, you can see 
-version that we used for the application. However, for extra learning, I'm developing a parallel verison, which can be found in Martin branch. These two verisons are very different from each other.
+version that we used for the application. However, for extra learning, I'm developing a parallel & different version, which can be found in Martin branch. 
 
 
 
